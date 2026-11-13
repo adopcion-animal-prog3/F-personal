@@ -1,5 +1,7 @@
 const DEFAULT_BASE_URL = 'http://localhost:3000'
 
+let authToken = ''
+
 const buildApiUrl = (path = '') => {
   const baseUrl = import.meta.env.VITE_API_URL || DEFAULT_BASE_URL
 
@@ -8,6 +10,27 @@ const buildApiUrl = (path = '') => {
   }
 
   return `${baseUrl.replace(/\/$/, '')}/${path.replace(/^\//, '')}`
+}
+
+const buildHeaders = (customHeaders = {}) => {
+  const headers = {
+    'Content-Type': 'application/json',
+    ...customHeaders,
+  }
+
+  if (authToken) {
+    headers.Authorization = `Bearer ${authToken}`
+  }
+
+  return headers
+}
+
+export const setAuthToken = (token) => {
+  authToken = token || ''
+}
+
+export const clearAuthToken = () => {
+  authToken = ''
 }
 
 export const getApiError = async (response) => {
@@ -26,12 +49,10 @@ export const getApiError = async (response) => {
 }
 
 export const apiClient = {
-  async get(path) {
+  async request(path, options = {}) {
     const response = await fetch(buildApiUrl(path), {
-      method: 'GET',
-      headers: {
-        'Content-Type': 'application/json',
-      },
+      ...options,
+      headers: buildHeaders(options.headers || {}),
     })
 
     if (!response.ok) {
@@ -39,5 +60,23 @@ export const apiClient = {
     }
 
     return response.json().catch(() => null)
+  },
+
+  async get(path) {
+    return this.request(path, { method: 'GET' })
+  },
+
+  async post(path, body) {
+    return this.request(path, {
+      method: 'POST',
+      body: JSON.stringify(body ?? {}),
+    })
+  },
+
+  async put(path, body) {
+    return this.request(path, {
+      method: 'PUT',
+      body: JSON.stringify(body ?? {}),
+    })
   },
 }
