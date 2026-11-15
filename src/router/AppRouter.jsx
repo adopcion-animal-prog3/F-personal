@@ -4,6 +4,7 @@ import { useAuth } from '../context/AuthContext'
 import AuthPage from '../pages/AuthPage'
 import HistorialPage from '../pages/HistorialPage'
 import HomePage from '../pages/HomePage'
+import MascotaDetailPage from '../pages/MascotaDetailPage'
 import MascotasPage from '../pages/MascotasPage'
 import NotFoundPage from '../pages/NotFoundPage'
 import SolicitudesPage from '../pages/SolicitudesPage'
@@ -35,6 +36,7 @@ function AppRouter() {
         >
           <Route path="/" element={<HomePage />} />
           <Route path="/mascotas" element={<MascotasPage />} />
+          <Route path="/mascotas/:id" element={<MascotaDetailPage />} />
           <Route path="/solicitudes" element={<SolicitudesPage />} />
           <Route path="/historial" element={<HistorialPage />} />
         </Route>

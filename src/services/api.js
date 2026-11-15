@@ -3,7 +3,7 @@ const DEFAULT_BASE_URL = 'http://localhost:3000'
 let authToken = ''
 
 const buildApiUrl = (path = '') => {
-  const baseUrl = import.meta.env.VITE_API_URL || DEFAULT_BASE_URL
+  const baseUrl = (import.meta.env.VITE_API_URL || DEFAULT_BASE_URL).trim()
 
   if (!path) {
     return baseUrl
@@ -33,6 +33,14 @@ export const clearAuthToken = () => {
   authToken = ''
 }
 
+export class ApiError extends Error {
+  constructor(message, status) {
+    super(message)
+    this.name = 'ApiError'
+    this.status = status
+  }
+}
+
 export const getApiError = async (response) => {
   const errorText = await response.text().catch(() => '')
 
@@ -56,7 +64,7 @@ export const apiClient = {
     })
 
     if (!response.ok) {
-      throw new Error(await getApiError(response))
+      throw new ApiError(await getApiError(response), response.status)
     }
 
     return response.json().catch(() => null)
