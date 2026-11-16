@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react'
 import { Link, Navigate, useLocation, useNavigate } from 'react-router-dom'
 import AuthForm from '../components/AuthForm'
-import { useAuth } from '../context/AuthContext'
+import useAuth from '../hooks/useAuth'
 
 function AuthPage() {
   const location = useLocation()
@@ -12,7 +12,7 @@ function AuthPage() {
 
   useEffect(() => {
     clearError()
-  }, [location.pathname])
+  }, [clearError, location.pathname])
 
   if (isAuthenticated) {
     return <Navigate to="/" replace />

@@ -1,9 +1,11 @@
+import PropTypes from 'prop-types'
 import { BrowserRouter, Navigate, Route, Routes } from 'react-router-dom'
 import AppLayout from '../components/AppLayout'
-import { useAuth } from '../context/AuthContext'
+import useAuth from '../hooks/useAuth'
 import AuthPage from '../pages/AuthPage'
 import HistorialPage from '../pages/HistorialPage'
 import HomePage from '../pages/HomePage'
+import MascotaDetailPage from '../pages/MascotaDetailPage'
 import MascotasPage from '../pages/MascotasPage'
 import NotFoundPage from '../pages/NotFoundPage'
 import SolicitudesPage from '../pages/SolicitudesPage'
@@ -22,6 +24,10 @@ function ProtectedRoute({ children }) {
   return children
 }
 
+ProtectedRoute.propTypes = {
+  children: PropTypes.node.isRequired,
+}
+
 function AppRouter() {
   return (
     <BrowserRouter>
@@ -35,6 +41,7 @@ function AppRouter() {
         >
           <Route path="/" element={<HomePage />} />
           <Route path="/mascotas" element={<MascotasPage />} />
+          <Route path="/mascotas/:id" element={<MascotaDetailPage />} />
           <Route path="/solicitudes" element={<SolicitudesPage />} />
           <Route path="/historial" element={<HistorialPage />} />
         </Route>

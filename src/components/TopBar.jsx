@@ -1,5 +1,6 @@
+import PropTypes from 'prop-types'
 import { Link } from 'react-router-dom'
-import { useAuth } from '../context/AuthContext'
+import useAuth from '../hooks/useAuth'
 
 function TopBar({ title }) {
   const { isAuthenticated, user, logout } = useAuth()
@@ -32,6 +33,10 @@ function TopBar({ title }) {
       </div>
     </header>
   )
+}
+
+TopBar.propTypes = {
+  title: PropTypes.string.isRequired,
 }
 
 export default TopBar
