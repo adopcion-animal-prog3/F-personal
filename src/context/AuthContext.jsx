@@ -1,11 +1,11 @@
-import { createContext, useContext, useEffect, useMemo, useState } from 'react'
+import { useCallback, useEffect, useMemo, useState } from 'react'
+import PropTypes from 'prop-types'
 import { authService } from '../services/authService'
 import { clearAuthToken, setAuthToken } from '../services/api'
+import AuthContext from './AuthContextValue'
 
 const STORAGE_KEY = 'f-personal-auth-session'
 const emptySession = { token: '', user: null }
-
-const AuthContext = createContext(null)
 
 const getStoredSession = () => {
   try {
@@ -97,7 +97,7 @@ export function AuthProvider({ children }) {
     }
   }, [session.token])
 
-  const login = async (credentials) => {
+  const login = useCallback(async (credentials) => {
     setError('')
     setIsLoading(true)
 
@@ -108,12 +108,10 @@ export function AuthProvider({ children }) {
         throw new Error('La API no devolvió un token válido.')
       }
 
-      const nextSession = {
+      setSession((current) => ({
         token: response.token,
-        user: response.user ?? session.user,
-      }
-
-      setSession(nextSession)
+        user: response.user ?? current.user,
+      }))
       return true
     } catch (authError) {
       setError(readErrorMessage(authError))
@@ -121,9 +119,9 @@ export function AuthProvider({ children }) {
     } finally {
       setIsLoading(false)
     }
-  }
+  }, [])
 
-  const register = async (credentials) => {
+  const register = useCallback(async (credentials) => {
     setError('')
     setIsLoading(true)
 
@@ -150,17 +148,17 @@ export function AuthProvider({ children }) {
     } finally {
       setIsLoading(false)
     }
-  }
+  }, [])
 
-  const logout = () => {
+  const logout = useCallback(() => {
     setSession(emptySession)
     clearAuthToken()
     setError('')
-  }
+  }, [])
 
-  const clearError = () => {
+  const clearError = useCallback(() => {
     setError('')
-  }
+  }, [])
 
   const value = useMemo(
     () => ({
@@ -175,18 +173,12 @@ export function AuthProvider({ children }) {
       logout,
       clearError,
     }),
-    [session, isLoading, error],
+    [session, isLoading, error, login, register, logout, clearError],
   )
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>
 }
 
-export const useAuth = () => {
-  const context = useContext(AuthContext)
-
-  if (!context) {
-    throw new Error('useAuth debe usarse dentro de AuthProvider')
-  }
-
-  return context
+AuthProvider.propTypes = {
+  children: PropTypes.node.isRequired,
 }

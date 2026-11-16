@@ -1,8 +1,6 @@
-import { fireEvent, render, screen, waitFor } from '@testing-library/react'
-import { MemoryRouter, Route, Routes } from 'react-router-dom'
+import { fireEvent, screen } from '@testing-library/react'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
-import MascotaDetailPage from './MascotaDetailPage'
-import MascotasPage from './MascotasPage'
+import { mascotaDePrueba, renderMascotasRoutes } from '../test/mascotasTestUtils'
 
 vi.mock('../services/mascotasService', () => ({
   mascotasService: { getAll: vi.fn(), getById: vi.fn() },
@@ -10,84 +8,47 @@ vi.mock('../services/mascotasService', () => ({
 
 import { mascotasService } from '../services/mascotasService'
 
-const mascota = {
-  id: 7,
-  nombre: 'Mora',
-  especie: 'Perro',
-  raza: 'Mestiza',
-  edad: 0,
-  sexo: 'F',
-  descripcion: 'Tranquila y amistosa',
-  adoptada: false,
-}
-
-function renderRoutes(path = '/mascotas') {
-  return render(
-    <MemoryRouter initialEntries={[path]}>
-      <Routes>
-        <Route path="/mascotas" element={<MascotasPage />} />
-        <Route path="/mascotas/:id" element={<MascotaDetailPage />} />
-      </Routes>
-    </MemoryRouter>,
-  )
-}
-
-describe('pantallas de mascotas', () => {
+describe('MascotasPage', () => {
   beforeEach(() => {
     vi.clearAllMocks()
     mascotasService.getAll.mockResolvedValue([])
-    mascotasService.getById.mockResolvedValue(null)
   })
 
   it('muestra las mascotas devueltas por el servicio', async () => {
-    mascotasService.getAll.mockResolvedValue([mascota])
-    renderRoutes()
+    const adoptada = { ...mascotaDePrueba, id: 8, nombre: 'Tom', adoptada: true, raza: null, descripcion: '' }
+    mascotasService.getAll.mockResolvedValue([mascotaDePrueba, adoptada])
+    renderMascotasRoutes()
 
     expect(await screen.findByRole('link', { name: /mora/i })).toHaveAttribute('href', '/mascotas/7')
+    expect(screen.getByRole('link', { name: /tom/i })).toHaveAttribute('href', '/mascotas/8')
     expect(screen.getByText('Tranquila y amistosa')).toBeInTheDocument()
-    expect(screen.getByText('0')).toBeInTheDocument()
     expect(screen.getByText('Disponible')).toBeInTheDocument()
+    expect(screen.getByText('Adoptada')).toBeInTheDocument()
+    expect(screen.getByText('No informada')).toBeInTheDocument()
+    expect(screen.getByText('Sin descripción')).toBeInTheDocument()
   })
 
   it('informa cuando el listado está vacío', async () => {
-    renderRoutes()
+    renderMascotasRoutes()
     expect(await screen.findByText(/todavía no hay mascotas/i)).toBeInTheDocument()
   })
 
   it('muestra el estado de carga mientras responde el servicio', () => {
     mascotasService.getAll.mockReturnValue(new Promise(() => {}))
-    renderRoutes()
+    renderMascotasRoutes()
     expect(screen.getByRole('status')).toHaveTextContent('Cargando mascotas')
   })
 
-  it('muestra un error de carga del servicio', async () => {
-    mascotasService.getAll.mockRejectedValue(new Error('API no disponible'))
-    renderRoutes()
-    expect(await screen.findByRole('alert')).toHaveTextContent('API no disponible')
-  })
+  it('muestra el error del servicio y permite reintentar', async () => {
+    mascotasService.getAll.mockRejectedValueOnce(new Error('API no disponible'))
+    renderMascotasRoutes()
 
-  it('muestra el detalle de una mascota para el ID de la ruta', async () => {
-    mascotasService.getById.mockResolvedValue(mascota)
-    renderRoutes('/mascotas/7')
+    const alert = await screen.findByRole('alert')
+    expect(alert).toHaveTextContent('No se pudieron cargar las mascotas. API no disponible')
 
-    expect(await screen.findByRole('heading', { name: 'Mora' })).toBeInTheDocument()
-    expect(mascotasService.getById).toHaveBeenCalledWith('7')
-    expect(screen.getByText('Mestiza')).toBeInTheDocument()
-  })
-
-  it('informa cuando no existe la mascota solicitada', async () => {
-    renderRoutes('/mascotas/999')
-    expect(await screen.findByText(/no se encontró una mascota/i)).toBeInTheDocument()
-  })
-
-  it('permite navegar del listado al detalle y volver', async () => {
-    mascotasService.getAll.mockResolvedValue([mascota])
-    mascotasService.getById.mockResolvedValue(mascota)
-    renderRoutes()
-    fireEvent.click(await screen.findByRole('link', { name: /mora/i }))
-
-    await waitFor(() => expect(mascotasService.getById).toHaveBeenCalledWith('7'))
-    fireEvent.click(await screen.findByRole('link', { name: /volver al listado/i }))
+    mascotasService.getAll.mockResolvedValueOnce([mascotaDePrueba])
+    fireEvent.click(screen.getByRole('button', { name: /reintentar/i }))
     expect(await screen.findByRole('link', { name: /mora/i })).toBeInTheDocument()
+    expect(mascotasService.getAll).toHaveBeenCalledTimes(2)
   })
 })

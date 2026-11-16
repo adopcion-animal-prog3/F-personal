@@ -1,44 +1,6 @@
 import { useMemo, useState } from 'react'
-
-const emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
-
-const buildInitialValues = (mode) => ({
-  nombre: '',
-  email: '',
-  password: '',
-  confirmPassword: '',
-  ...(mode === 'login' ? { nombre: '', confirmPassword: '' } : {}),
-})
-
-const validateField = (values, mode) => {
-  const errors = {}
-
-  if (mode === 'register' && !values.nombre.trim()) {
-    errors.nombre = 'El nombre es obligatorio.'
-  }
-
-  if (!values.email.trim()) {
-    errors.email = 'El email es obligatorio.'
-  } else if (!emailPattern.test(values.email)) {
-    errors.email = 'Ingresá un email válido.'
-  }
-
-  if (!values.password) {
-    errors.password = 'La contraseña es obligatoria.'
-  } else if (values.password.length < 6) {
-    errors.password = 'La contraseña debe tener al menos 6 caracteres.'
-  }
-
-  if (mode === 'register') {
-    if (!values.confirmPassword) {
-      errors.confirmPassword = 'Confirmá la contraseña.'
-    } else if (values.confirmPassword !== values.password) {
-      errors.confirmPassword = 'Las contraseñas no coinciden.'
-    }
-  }
-
-  return errors
-}
+import PropTypes from 'prop-types'
+import { buildInitialValues, validateField } from '../utils/authValidation'
 
 function AuthForm({ mode = 'login', onSubmit, isSubmitting, submitError }) {
   const initialValues = useMemo(() => buildInitialValues(mode), [mode])
@@ -142,6 +104,13 @@ function AuthForm({ mode = 'login', onSubmit, isSubmitting, submitError }) {
       </button>
     </form>
   )
+}
+
+AuthForm.propTypes = {
+  mode: PropTypes.oneOf(['login', 'register']),
+  onSubmit: PropTypes.func.isRequired,
+  isSubmitting: PropTypes.bool,
+  submitError: PropTypes.string,
 }
 
 export default AuthForm

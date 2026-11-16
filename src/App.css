@@ -408,16 +408,14 @@ ul {
   transform: translateY(-2px);
 }
 
-.mascota-card-heading,
-.mascota-detail-heading {
+.mascota-card-heading {
   display: flex;
   align-items: center;
   justify-content: space-between;
   gap: 0.75rem;
 }
 
-.mascota-card-heading h3,
-.mascota-detail-heading h3 {
+.mascota-card-heading h3 {
   margin: 0;
   font-size: 1.15rem;
 }
@@ -477,11 +475,6 @@ ul {
 
 .resource-state-error {
   color: #b91c1c;
-}
-
-.mascota-detail {
-  display: grid;
-  gap: 1rem;
 }
 
 .mascota-back-link {

@@ -29,6 +29,9 @@ export default [
         sourceType: 'module',
       },
     },
+    settings: {
+      react: { version: 'detect' },
+    },
     plugins: {
       react: reactPlugin,
       'react-hooks': reactHooks,

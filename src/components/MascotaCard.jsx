@@ -2,15 +2,13 @@ import { Link } from 'react-router-dom'
 import PropTypes from 'prop-types'
 import MascotaBadge from './MascotaBadge'
 
-function MascotaCard({ mascota, to, showHeading = true }) {
+function MascotaCard({ mascota, to }) {
   const Content = (
     <div>
-      {showHeading ? (
-        <div className="mascota-card-heading">
-          <h3>{mascota.nombre}</h3>
-          <MascotaBadge adoptada={mascota.adoptada} />
-        </div>
-      ) : null}
+      <div className="mascota-card-heading">
+        <h3>{mascota.nombre}</h3>
+        <MascotaBadge adoptada={mascota.adoptada} />
+      </div>
       <dl className="mascota-fields">
         <div><dt>Especie</dt><dd>{mascota.especie}</dd></div>
         <div><dt>Raza</dt><dd>{mascota.raza || 'No informada'}</dd></div>
@@ -41,7 +39,6 @@ MascotaCard.propTypes = {
     adoptada: PropTypes.bool.isRequired,
   }).isRequired,
   to: PropTypes.string,
-  showHeading: PropTypes.bool,
 }
 
 export default MascotaCard

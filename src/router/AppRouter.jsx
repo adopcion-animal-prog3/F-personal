@@ -1,6 +1,7 @@
+import PropTypes from 'prop-types'
 import { BrowserRouter, Navigate, Route, Routes } from 'react-router-dom'
 import AppLayout from '../components/AppLayout'
-import { useAuth } from '../context/AuthContext'
+import useAuth from '../hooks/useAuth'
 import AuthPage from '../pages/AuthPage'
 import HistorialPage from '../pages/HistorialPage'
 import HomePage from '../pages/HomePage'
@@ -21,6 +22,10 @@ function ProtectedRoute({ children }) {
   }
 
   return children
+}
+
+ProtectedRoute.propTypes = {
+  children: PropTypes.node.isRequired,
 }
 
 function AppRouter() {
