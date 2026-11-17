@@ -1,6 +1,8 @@
 import { render } from '@testing-library/react'
 import { MemoryRouter, Route, Routes } from 'react-router-dom'
+import AuthContext from '../context/AuthContextValue'
 import MascotaDetailPage from '../pages/MascotaDetailPage'
+import MascotaFormPage from '../pages/MascotaFormPage'
 import MascotasPage from '../pages/MascotasPage'
 
 export const mascotaDePrueba = {
@@ -14,13 +16,17 @@ export const mascotaDePrueba = {
   adoptada: false,
 }
 
-export function renderMascotasRoutes(path = '/mascotas') {
+export function renderMascotasRoutes(path = '/mascotas', role = 'ADOPTANTE') {
   return render(
-    <MemoryRouter initialEntries={[path]}>
-      <Routes>
-        <Route path="/mascotas" element={<MascotasPage />} />
-        <Route path="/mascotas/:id" element={<MascotaDetailPage />} />
-      </Routes>
-    </MemoryRouter>,
+    <AuthContext.Provider value={{ user: { rol: role } }}>
+      <MemoryRouter initialEntries={[path]}>
+        <Routes>
+          <Route path="/mascotas" element={<MascotasPage />} />
+          <Route path="/mascotas/nueva" element={<MascotaFormPage />} />
+          <Route path="/mascotas/:id/editar" element={<MascotaFormPage />} />
+          <Route path="/mascotas/:id" element={<MascotaDetailPage />} />
+        </Routes>
+      </MemoryRouter>
+    </AuthContext.Provider>,
   )
 }

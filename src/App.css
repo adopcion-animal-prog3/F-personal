@@ -325,7 +325,9 @@ ul {
   font-weight: 600;
 }
 
-.field input {
+.field input,
+.field textarea,
+.field select {
   width: 100%;
   border: 1px solid #cbd5e1;
   border-radius: 0.8rem;
@@ -334,9 +336,42 @@ ul {
   color: #0f172a;
 }
 
-.field input:focus {
+.field input:focus,
+.field textarea:focus,
+.field select:focus {
   outline: 2px solid rgba(59, 130, 246, 0.2);
   border-color: #3b82f6;
+}
+
+.field textarea {
+  min-height: 6rem;
+  resize: vertical;
+}
+
+.mascota-create-link {
+  margin-bottom: 1rem;
+}
+
+.mascota-form-actions,
+.mascota-management {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+  align-items: center;
+}
+
+.mascota-management {
+  margin-top: 1rem;
+}
+
+.mascota-management .form-alert {
+  flex-basis: 100%;
+  margin: 0;
+}
+
+.button-danger {
+  background: #fee2e2;
+  color: #991b1b;
 }
 
 .field small {

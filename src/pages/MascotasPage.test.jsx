@@ -33,6 +33,12 @@ describe('MascotasPage', () => {
     expect(await screen.findByText(/todavía no hay mascotas/i)).toBeInTheDocument()
   })
 
+  it('muestra la acción para crear mascotas solamente a ADMIN', async () => {
+    renderMascotasRoutes('/mascotas', 'ADMIN')
+    expect(await screen.findByRole('link', { name: /agregar mascota/i }))
+      .toHaveAttribute('href', '/mascotas/nueva')
+  })
+
   it('muestra el estado de carga mientras responde el servicio', () => {
     mascotasService.getAll.mockReturnValue(new Promise(() => {}))
     renderMascotasRoutes()
