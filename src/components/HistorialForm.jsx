@@ -21,8 +21,11 @@ function HistorialForm({ values, errors, onChange, onSubmit, cancelTo, isSubmitt
       </label>
       <label className="field" htmlFor="veterinario">
         <span>Veterinario</span>
-        <input id="veterinario" value={values.veterinario}
+        <input id="veterinario" maxLength={200} value={values.veterinario}
+          aria-invalid={Boolean(errors.veterinario)}
+          aria-describedby={errors.veterinario ? 'veterinario-error' : undefined}
           onChange={(event) => onChange('veterinario', event.target.value)} />
+        {errors.veterinario ? <small id="veterinario-error">{errors.veterinario}</small> : null}
       </label>
       <div className="form-actions">
         <button className="button button-primary" type="submit" disabled={isSubmitting}>

@@ -7,17 +7,25 @@ export const buildSolicitudInitialValues = (mascotaId = '') => ({
 
 export const validateSolicitud = (values, mascotas) => {
   const errors = {}
-  const mascotaExists = mascotas.some((mascota) => String(mascota.id) === values.mascotaId)
+  const mascota = mascotas.find((item) => String(item.id) === values.mascotaId)
 
   if (!values.mascotaId) errors.mascotaId = 'Seleccioná una mascota.'
-  else if (!mascotaExists) errors.mascotaId = 'La mascota seleccionada no está disponible.'
+  else if (!mascota || mascota.adoptada) {
+    errors.mascotaId = 'La mascota seleccionada no está disponible para adopción.'
+  }
 
   return errors
 }
 
 export const buildSolicitudPayload = (values, mascotas) => {
   const mascota = mascotas.find((item) => String(item.id) === values.mascotaId)
-  if (!mascota) throw new Error('La mascota seleccionada no está disponible.')
+  if (!mascota || mascota.adoptada) {
+    throw new Error('La mascota seleccionada no está disponible para adopción.')
+  }
+  const mascotaId = Number(mascota.id)
+  if (!Number.isSafeInteger(mascotaId) || mascotaId <= 0) {
+    throw new Error('El identificador de la mascota no es válido.')
+  }
 
-  return { mascota_id: mascota.id, mensaje: values.mensaje.trim() }
+  return { mascota_id: mascotaId, mensaje: values.mensaje.trim() }
 }

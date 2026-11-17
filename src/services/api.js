@@ -1,6 +1,5 @@
-const DEFAULT_BASE_URL = 'http://localhost:3000'
-
 let authToken = ''
+export const API_UNAUTHORIZED_EVENT = 'f-personal:unauthorized'
 
 export const requireApiUrl = (resource) => {
   if (!import.meta.env.VITE_API_URL?.trim()) {
@@ -9,7 +8,7 @@ export const requireApiUrl = (resource) => {
 }
 
 const buildApiUrl = (path = '') => {
-  const baseUrl = (import.meta.env.VITE_API_URL || DEFAULT_BASE_URL).trim()
+  const baseUrl = import.meta.env.VITE_API_URL.trim()
 
   if (!path) {
     return baseUrl
@@ -18,9 +17,9 @@ const buildApiUrl = (path = '') => {
   return `${baseUrl.replace(/\/$/, '')}/${path.replace(/^\//, '')}`
 }
 
-const buildHeaders = (customHeaders = {}) => {
+const buildHeaders = (customHeaders = {}, hasJsonBody = false) => {
   const headers = {
-    'Content-Type': 'application/json',
+    ...(hasJsonBody ? { 'Content-Type': 'application/json' } : {}),
     ...customHeaders,
   }
 
@@ -48,7 +47,12 @@ export class ApiError extends Error {
 }
 
 export const getApiError = async (response) => {
-  const errorText = await response.text().catch(() => '')
+  let errorText = ''
+  try {
+    errorText = await response.text()
+  } catch {
+    return `La API respondió con un error (${response.status}).`
+  }
 
   if (!errorText) {
     return `La API respondió con un error (${response.status}).`
@@ -56,7 +60,13 @@ export const getApiError = async (response) => {
 
   try {
     const payload = JSON.parse(errorText)
-    return payload.detail || payload.message || payload.error || errorText
+    const message = payload.message || payload.error?.message || payload.detail
+    const validationMessages = Array.isArray(payload.errors)
+      ? payload.errors
+        .map((item) => [item.field, item.message].filter(Boolean).join(': '))
+        .filter(Boolean)
+      : []
+    return [message, ...validationMessages].filter(Boolean).join(' — ') || errorText
   } catch {
     return errorText
   }
@@ -66,14 +76,44 @@ export const apiClient = {
   async request(path, options = {}) {
     const response = await fetch(buildApiUrl(path), {
       ...options,
-      headers: buildHeaders(options.headers || {}),
+      headers: buildHeaders(options.headers || {}, options.body != null),
     })
 
     if (!response.ok) {
-      throw new ApiError(await getApiError(response), response.status)
+      const message = await getApiError(response)
+      if (response.status === 401 && authToken) {
+        clearAuthToken()
+        if (typeof window !== 'undefined') {
+          window.dispatchEvent(new Event(API_UNAUTHORIZED_EVENT))
+        }
+      }
+      throw new ApiError(message, response.status)
     }
 
-    return response.json().catch(() => null)
+    if (response.status === 204) {
+    return null
+    }
+
+    const responseText = await response.text()
+    if (!responseText.trim()) {
+    throw new Error('La API respondió sin contenido para una operación exitosa.')
+    }
+
+    let payload
+    try {
+    payload = JSON.parse(responseText)
+    } catch {
+    throw new Error('La API respondió con un formato JSON inválido.')
+    }
+
+    if (payload?.success === true) {
+    if (!Object.prototype.hasOwnProperty.call(payload, 'data')) {
+      throw new Error('La API devolvió una respuesta exitosa sin datos.')
+    }
+    return payload.data
+    }
+
+    return payload
   },
 
   async get(path) {

@@ -12,6 +12,9 @@ describe('validación de historial clínico', () => {
     expect(validateHistorial({ ...initial, descripcion: '  ' }).descripcion)
       .toMatch(/obligatoria/i)
     expect(validateHistorial({ ...initial, descripcion: ' Control ' })).toEqual({})
+    expect(validateHistorial({
+      ...initial, descripcion: 'Control', veterinario: 'v'.repeat(201),
+    }).veterinario).toMatch(/200 caracteres/i)
     expect(buildHistorialPayload({ ...initial, descripcion: ' Control ', veterinario: '' }))
       .toEqual({ fecha_registro: '2026-02-01', descripcion: 'Control', veterinario: null })
   })

@@ -7,6 +7,7 @@ const response = (body, status = 200) => ({
   json: async () => body,
   text: async () => JSON.stringify(body),
 })
+const success = (data) => ({ success: true, status: 'success', data })
 
 describe('mascotasService', () => {
   afterEach(() => {
@@ -16,7 +17,7 @@ describe('mascotasService', () => {
 
   it('consulta el listado previsto en la API', async () => {
     vi.stubEnv('VITE_API_URL', 'https://api.example.test')
-    const fetchMock = vi.spyOn(globalThis, 'fetch').mockResolvedValue(response([]))
+    const fetchMock = vi.spyOn(globalThis, 'fetch').mockResolvedValue(response(success([])))
 
     await expect(mascotasService.getAll()).resolves.toEqual([])
     expect(fetchMock).toHaveBeenCalledWith(
@@ -27,7 +28,7 @@ describe('mascotasService', () => {
 
   it('consulta el detalle con el ID codificado en la ruta', async () => {
     vi.stubEnv('VITE_API_URL', 'https://api.example.test')
-    const fetchMock = vi.spyOn(globalThis, 'fetch').mockResolvedValue(response({ id: 'a/b' }))
+    const fetchMock = vi.spyOn(globalThis, 'fetch').mockResolvedValue(response(success({ id: 'a/b' })))
 
     await mascotasService.getById('a/b')
     expect(fetchMock).toHaveBeenCalledWith(
@@ -39,9 +40,9 @@ describe('mascotasService', () => {
   it('prepara las operaciones de alta, edición y eliminación HTTP', async () => {
     vi.stubEnv('VITE_API_URL', 'https://api.example.test')
     const fetchMock = vi.spyOn(globalThis, 'fetch')
-      .mockResolvedValueOnce(response({ id: 2 }))
-      .mockResolvedValueOnce(response({ id: 2 }))
-      .mockResolvedValueOnce(response(null))
+      .mockResolvedValueOnce(response(success({ id: 2 })))
+      .mockResolvedValueOnce(response(success({ id: 2 })))
+      .mockResolvedValueOnce(response(null, 204))
     const payload = { nombre: 'Luna', especie: 'Gato', edad: null }
 
     await mascotasService.create(payload)
@@ -68,10 +69,15 @@ describe('mascotasService', () => {
 
   it('devuelve null ante un 404 y propaga otros errores', async () => {
     vi.stubEnv('VITE_API_URL', 'https://api.example.test')
-    vi.spyOn(globalThis, 'fetch').mockResolvedValue(response({ detail: 'No existe' }, 404))
+    vi.spyOn(globalThis, 'fetch').mockResolvedValue(response({
+      success: false, status: 'error', message: 'No existe', error: { message: 'No existe' },
+    }, 404))
     await expect(mascotasService.getById(404)).resolves.toBeNull()
 
-    vi.spyOn(globalThis, 'fetch').mockResolvedValue(response({ detail: 'Error interno' }, 500))
+    vi.spyOn(globalThis, 'fetch').mockResolvedValue(response({
+      success: false, status: 'error', message: 'Error interno',
+      error: { message: 'Error interno' },
+    }, 500))
     await expect(mascotasService.getById(1)).rejects.toThrow('Error interno')
   })
 

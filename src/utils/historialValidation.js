@@ -4,9 +4,12 @@ export const buildHistorialInitialValues = (registro = {}) => ({
   veterinario: registro.veterinario ?? '',
 })
 
-export const validateHistorial = (values) => (
-  values.descripcion.trim() ? {} : { descripcion: 'La descripción es obligatoria.' }
-)
+export const validateHistorial = (values) => ({
+  ...(!(values.descripcion ?? '').trim() ? { descripcion: 'La descripción es obligatoria.' } : {}),
+  ...((values.veterinario ?? '').trim().length > 200
+    ? { veterinario: 'El veterinario no puede superar 200 caracteres.' }
+    : {}),
+})
 
 export const buildHistorialPayload = (values) => ({
   fecha_registro: values.fecha_registro || null,

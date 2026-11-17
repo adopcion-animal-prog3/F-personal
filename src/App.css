@@ -364,6 +364,17 @@ ul {
   font-weight: 600;
 }
 
+.field-checkbox {
+  flex-direction: row;
+  align-items: center;
+}
+
+.field.field-checkbox input {
+  width: auto;
+  margin: 0;
+  padding: 0;
+}
+
 .field input,
 .field textarea,
 .field select {

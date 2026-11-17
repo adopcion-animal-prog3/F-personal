@@ -278,7 +278,8 @@ Implementá únicamente los endpoints necesarios para la Issue actual. No agregu
 La URL base debe centralizarse en una variable de entorno, por ejemplo:
 
 ```env
-VITE_API_URL=http://localhost:3000
+VITE_API_URL=/
+API_PROXY_TARGET=http://localhost:8000
 ```
 
 El valor concreto debe coincidir con el backend y la configuración local del proyecto.

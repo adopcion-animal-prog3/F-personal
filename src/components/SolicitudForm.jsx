@@ -5,6 +5,8 @@ import FeedbackMessage from './FeedbackMessage'
 function SolicitudForm({
   mascotas, values, errors, onChange, onSubmit, cancelTo, isSubmitting, submitError,
 }) {
+  const mascotasDisponibles = mascotas.filter((mascota) => !mascota.adoptada)
+
   return (
     <form className="auth-form" onSubmit={onSubmit} noValidate aria-busy={isSubmitting}>
       {submitError ? <FeedbackMessage>{submitError}</FeedbackMessage> : null}
@@ -14,13 +16,14 @@ function SolicitudForm({
           aria-describedby={errors.mascotaId ? 'mascotaId-error' : undefined}
           onChange={(event) => onChange('mascotaId', event.target.value)}>
           <option value="">Seleccioná una mascota</option>
-          {mascotas.map((mascota) => (
+          {mascotasDisponibles.map((mascota) => (
             <option key={mascota.id} value={String(mascota.id)}>
               {mascota.nombre} ({mascota.especie})
             </option>
           ))}
         </select>
         {errors.mascotaId ? <small id="mascotaId-error">{errors.mascotaId}</small> : null}
+        {!mascotasDisponibles.length ? <small>No hay mascotas disponibles para adoptar.</small> : null}
       </label>
       <label className="field" htmlFor="mensaje">
         <span>Mensaje</span>
@@ -28,7 +31,7 @@ function SolicitudForm({
           onChange={(event) => onChange('mensaje', event.target.value)} />
       </label>
       <div className="form-actions">
-        <button className="button button-primary" type="submit" disabled={isSubmitting || !mascotas.length}>
+        <button className="button button-primary" type="submit" disabled={isSubmitting || !mascotasDisponibles.length}>
           {isSubmitting ? 'Enviando...' : 'Enviar solicitud'}
         </button>
         <Link className="button button-secondary" to={cancelTo}>Cancelar</Link>
