@@ -1,6 +1,6 @@
 # F-personal
 
-Frontend de la Plataforma de Adopción y Gestión de Salud Animal, desarrollado
+Frontend de la Plataforma de Adopción y Gestión de Salud Animal, desarrollad
 con React y Vite. Consume la API REST de B-personal; no se conecta directamente
 con PostgreSQL.
 
