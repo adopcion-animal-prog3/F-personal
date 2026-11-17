@@ -1,4 +1,5 @@
 import { render, screen } from '@testing-library/react'
+import userEvent from '@testing-library/user-event'
 import { describe, expect, it, vi } from 'vitest'
 import useAuth from '../hooks/useAuth'
 import { AuthProvider } from './AuthContext'
@@ -30,6 +31,7 @@ function AuthProbe() {
 
 describe('AuthContext', () => {
   it('renders the session state and exposes login/logout actions', async () => {
+    const user = userEvent.setup()
     render(
       <AuthProvider>
         <AuthProbe />
@@ -39,8 +41,10 @@ describe('AuthContext', () => {
     expect(screen.getByText('sin-sesion')).toBeInTheDocument()
     expect(screen.getByText('sin-rol')).toBeInTheDocument()
 
-    screen.getByRole('button', { name: /login/i }).click()
+    await user.click(screen.getByRole('button', { name: /login/i }))
 
     expect(await screen.findByText('autenticado')).toBeInTheDocument()
+    await user.click(screen.getByRole('button', { name: /logout/i }))
+    expect(await screen.findByText('sin-sesion')).toBeInTheDocument()
   })
 })

@@ -29,6 +29,25 @@ describe('AuthForm', () => {
     expect(onSubmit).toHaveBeenCalledWith({ email: 'ana@test.com', password: 'secret123' })
   })
 
+  it('uses confirmation only for client-side validation on registration', async () => {
+    const onSubmit = vi.fn()
+    const user = userEvent.setup()
+
+    render(<AuthForm mode="register" onSubmit={onSubmit} isSubmitting={false} submitError="" />)
+
+    await user.type(screen.getByLabelText(/^nombre$/i), ' Ana ')
+    await user.type(screen.getByLabelText(/correo electrónico/i), 'ana@test.com')
+    await user.type(screen.getByLabelText(/^contraseña$/i), 'secret123')
+    await user.type(screen.getByLabelText(/confirmar contraseña/i), 'secret123')
+    await user.click(screen.getByRole('button', { name: /crear cuenta/i }))
+
+    expect(onSubmit).toHaveBeenCalledWith({
+      nombre: 'Ana',
+      email: 'ana@test.com',
+      password: 'secret123',
+    })
+  })
+
   it('disables and ignores submissions while authentication is pending', () => {
     const onSubmit = vi.fn()
     const { container } = render(

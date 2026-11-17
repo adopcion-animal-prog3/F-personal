@@ -1,10 +1,12 @@
 import { render, screen, waitFor } from '@testing-library/react'
-import { beforeEach, describe, expect, it, vi } from 'vitest'
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import App from './App'
+import { clearAuthToken } from './services/api'
 
 describe('App', () => {
   beforeEach(() => {
     window.localStorage.clear()
+    vi.stubEnv('VITE_API_URL', 'https://api.example.test')
     vi.stubGlobal(
       'fetch',
       vi.fn().mockResolvedValue({
@@ -17,6 +19,13 @@ describe('App', () => {
         }),
       }),
     )
+  })
+
+  afterEach(() => {
+    window.localStorage.clear()
+    vi.unstubAllGlobals()
+    vi.unstubAllEnvs()
+    clearAuthToken()
   })
 
   it('renders the dashboard shell for an authenticated user', async () => {
