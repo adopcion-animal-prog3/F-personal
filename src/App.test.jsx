@@ -47,4 +47,26 @@ describe('App', () => {
       expect(screen.getByRole('heading', { name: /página no encontrada/i })).toBeInTheDocument()
     })
   })
+
+  it('prevents an ADOPTANTE from opening the administration form route', async () => {
+    const adoptante = { id: 2, nombre: 'Luis', email: 'luis@test.com', rol: 'ADOPTANTE' }
+    vi.stubGlobal(
+      'fetch',
+      vi.fn().mockResolvedValue({
+        ok: true,
+        json: async () => ({ user: adoptante }),
+        text: async () => JSON.stringify({ user: adoptante }),
+      }),
+    )
+    window.localStorage.setItem(
+      'f-personal-auth-session',
+      JSON.stringify({ token: 'mock-token', user: adoptante }),
+    )
+    window.history.pushState({}, '', '/mascotas/nueva')
+
+    render(<App />)
+
+    expect(await screen.findByRole('heading', { name: 'Mascotas' })).toBeInTheDocument()
+    expect(screen.queryByRole('heading', { name: /nueva mascota/i })).not.toBeInTheDocument()
+  })
 })

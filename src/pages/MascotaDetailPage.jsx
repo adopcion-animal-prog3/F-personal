@@ -1,12 +1,15 @@
 import { Link, useParams } from 'react-router-dom'
 import MascotaCard from '../components/MascotaCard'
+import MascotaManagementActions from '../components/MascotaManagementActions'
 import MascotaResourceState from '../components/MascotaResourceState'
 import SectionCard from '../components/SectionCard'
+import useAuth from '../hooks/useAuth'
 import useMascota from '../hooks/useMascota'
 
 function MascotaDetailPage() {
   const { id } = useParams()
   const { data: mascota, error, status, retry } = useMascota(id)
+  const { user } = useAuth()
   const notFound = status === 'success' && !mascota
 
   return (
@@ -23,6 +26,7 @@ function MascotaDetailPage() {
             onRetry={retry}
           />
         )}
+        {user?.rol === 'ADMIN' && mascota ? <MascotaManagementActions mascota={mascota} /> : null}
         <Link className="button button-secondary mascota-back-link" to="/mascotas">
           Volver al listado
         </Link>

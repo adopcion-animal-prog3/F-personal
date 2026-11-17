@@ -87,4 +87,8 @@ export const apiClient = {
       body: JSON.stringify(body ?? {}),
     })
   },
+
+  async delete(path) {
+    return this.request(path, { method: 'DELETE' })
+  },
 }

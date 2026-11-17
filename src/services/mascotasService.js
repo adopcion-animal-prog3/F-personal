@@ -2,7 +2,7 @@ import { ApiError, apiClient } from './api'
 
 const requireApiUrl = () => {
   if (!import.meta.env.VITE_API_URL?.trim()) {
-    throw new Error('La URL de la API no está configurada. Definí VITE_API_URL para consultar mascotas.')
+    throw new Error('La URL de la API no está configurada. Definí VITE_API_URL para gestionar mascotas.')
   }
 }
 
@@ -39,5 +39,20 @@ export const mascotasService = {
 
       throw error
     }
+  },
+
+  async create(mascota) {
+    requireApiUrl()
+    return apiClient.post('/api/mascotas', mascota)
+  },
+
+  async update(id, mascota) {
+    requireApiUrl()
+    return apiClient.put(`/api/mascotas/${encodeURIComponent(id)}`, mascota)
+  },
+
+  async deleteById(id) {
+    requireApiUrl()
+    return apiClient.delete(`/api/mascotas/${encodeURIComponent(id)}`)
   },
 }

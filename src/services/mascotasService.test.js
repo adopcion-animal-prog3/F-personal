@@ -36,6 +36,36 @@ describe('mascotasService', () => {
     )
   })
 
+  it('prepara las operaciones de alta, edición y eliminación HTTP', async () => {
+    vi.stubEnv('VITE_API_URL', 'https://api.example.test')
+    const fetchMock = vi.spyOn(globalThis, 'fetch')
+      .mockResolvedValueOnce(response({ id: 2 }))
+      .mockResolvedValueOnce(response({ id: 2 }))
+      .mockResolvedValueOnce(response(null))
+    const payload = { nombre: 'Luna', especie: 'Gato', edad: null }
+
+    await mascotasService.create(payload)
+    await mascotasService.update('a/b', payload)
+    await mascotasService.deleteById('a/b')
+
+    expect(fetchMock).toHaveBeenNthCalledWith(1, 'https://api.example.test/api/mascotas',
+      expect.objectContaining({ method: 'POST', body: JSON.stringify(payload) }))
+    expect(fetchMock).toHaveBeenNthCalledWith(2, 'https://api.example.test/api/mascotas/a%2Fb',
+      expect.objectContaining({ method: 'PUT', body: JSON.stringify(payload) }))
+    expect(fetchMock).toHaveBeenNthCalledWith(3, 'https://api.example.test/api/mascotas/a%2Fb',
+      expect.objectContaining({ method: 'DELETE' }))
+  })
+
+  it('no envía operaciones de escritura sin URL configurada', async () => {
+    vi.stubEnv('VITE_API_URL', '')
+    const fetchMock = vi.spyOn(globalThis, 'fetch')
+
+    await expect(mascotasService.create({ nombre: 'Mora' })).rejects.toThrow(/VITE_API_URL/)
+    await expect(mascotasService.update(1, { nombre: 'Mora' })).rejects.toThrow(/VITE_API_URL/)
+    await expect(mascotasService.deleteById(1)).rejects.toThrow(/VITE_API_URL/)
+    expect(fetchMock).not.toHaveBeenCalled()
+  })
+
   it('devuelve null ante un 404 y propaga otros errores', async () => {
     vi.stubEnv('VITE_API_URL', 'https://api.example.test')
     vi.spyOn(globalThis, 'fetch').mockResolvedValue(response({ detail: 'No existe' }, 404))

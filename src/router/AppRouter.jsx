@@ -6,12 +6,13 @@ import AuthPage from '../pages/AuthPage'
 import HistorialPage from '../pages/HistorialPage'
 import HomePage from '../pages/HomePage'
 import MascotaDetailPage from '../pages/MascotaDetailPage'
+import MascotaFormPage from '../pages/MascotaFormPage'
 import MascotasPage from '../pages/MascotasPage'
 import NotFoundPage from '../pages/NotFoundPage'
 import SolicitudesPage from '../pages/SolicitudesPage'
 
-function ProtectedRoute({ children }) {
-  const { isAuthenticated, isLoading } = useAuth()
+function ProtectedRoute({ children, allowedRoles }) {
+  const { isAuthenticated, isLoading, user } = useAuth()
 
   if (isLoading) {
     return <div className="route-loader">Verificando sesión...</div>
@@ -21,11 +22,16 @@ function ProtectedRoute({ children }) {
     return <Navigate to="/login" replace />
   }
 
+  if (allowedRoles && !allowedRoles.includes(user?.rol)) {
+    return <Navigate to="/mascotas" replace />
+  }
+
   return children
 }
 
 ProtectedRoute.propTypes = {
   children: PropTypes.node.isRequired,
+  allowedRoles: PropTypes.arrayOf(PropTypes.string),
 }
 
 function AppRouter() {
@@ -41,7 +47,15 @@ function AppRouter() {
         >
           <Route path="/" element={<HomePage />} />
           <Route path="/mascotas" element={<MascotasPage />} />
+          <Route
+            path="/mascotas/nueva"
+            element={<ProtectedRoute allowedRoles={['ADMIN']}><MascotaFormPage /></ProtectedRoute>}
+          />
           <Route path="/mascotas/:id" element={<MascotaDetailPage />} />
+          <Route
+            path="/mascotas/:id/editar"
+            element={<ProtectedRoute allowedRoles={['ADMIN']}><MascotaFormPage /></ProtectedRoute>}
+          />
           <Route path="/solicitudes" element={<SolicitudesPage />} />
           <Route path="/historial" element={<HistorialPage />} />
         </Route>
