@@ -36,6 +36,7 @@ describe('SolicitudFormPage', () => {
     await user.click(screen.getByRole('button', { name: /enviar solicitud/i }))
 
     expect(await screen.findByRole('heading', { name: 'Solicitudes' })).toBeInTheDocument()
+    expect(await screen.findByText('La solicitud se envió correctamente.')).toBeInTheDocument()
     expect(solicitudesService.create).toHaveBeenCalledWith({
       mascota_id: 7, mensaje: 'Me gustaría adoptarla',
     })

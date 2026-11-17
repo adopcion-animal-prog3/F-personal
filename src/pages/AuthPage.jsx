@@ -20,14 +20,18 @@ function AuthPage() {
 
   const handleSubmit = async (values) => {
     setSubmitting(true)
-    const action = isLogin ? login : register
-    const success = await action(values)
+    try {
+      const action = isLogin ? login : register
+      const success = await action(values)
 
-    if (success) {
-      navigate('/')
+      if (success) {
+        navigate('/', {
+          state: { feedback: isLogin ? 'Sesión iniciada correctamente.' : 'Registro completado correctamente.' },
+        })
+      }
+    } finally {
+      setSubmitting(false)
     }
-
-    setSubmitting(false)
   }
 
   return (
@@ -44,6 +48,7 @@ function AuthPage() {
         <AuthForm
           mode={isLogin ? 'login' : 'register'}
           onSubmit={handleSubmit}
+          onClearError={clearError}
           isSubmitting={submitting || isLoading}
           submitError={error}
         />

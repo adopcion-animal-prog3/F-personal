@@ -1,10 +1,11 @@
 import PropTypes from 'prop-types'
 import { Link } from 'react-router-dom'
+import FeedbackMessage from './FeedbackMessage'
 
 function HistorialForm({ values, errors, onChange, onSubmit, cancelTo, isSubmitting, submitError }) {
   return (
-    <form className="auth-form" onSubmit={onSubmit} noValidate>
-      {submitError ? <p className="form-alert form-alert-error" role="alert">{submitError}</p> : null}
+    <form className="auth-form" onSubmit={onSubmit} noValidate aria-busy={isSubmitting}>
+      {submitError ? <FeedbackMessage>{submitError}</FeedbackMessage> : null}
       <label className="field" htmlFor="fecha_registro">
         <span>Fecha de registro</span>
         <input id="fecha_registro" type="date" value={values.fecha_registro}
@@ -14,8 +15,9 @@ function HistorialForm({ values, errors, onChange, onSubmit, cancelTo, isSubmitt
         <span>Descripción *</span>
         <textarea id="descripcion" value={values.descripcion}
           aria-invalid={Boolean(errors.descripcion)}
+          aria-describedby={errors.descripcion ? 'descripcion-error' : undefined}
           onChange={(event) => onChange('descripcion', event.target.value)} />
-        {errors.descripcion ? <small>{errors.descripcion}</small> : null}
+        {errors.descripcion ? <small id="descripcion-error">{errors.descripcion}</small> : null}
       </label>
       <label className="field" htmlFor="veterinario">
         <span>Veterinario</span>

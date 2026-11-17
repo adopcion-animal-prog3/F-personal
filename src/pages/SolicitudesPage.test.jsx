@@ -59,6 +59,7 @@ describe('SolicitudesPage', () => {
 
     expect(solicitudesService.updateStatus).toHaveBeenCalledWith(3, 'APROBADA')
     expect(await screen.findByText('APROBADA', { selector: '.solicitud-status' })).toBeInTheDocument()
+    expect(await screen.findByText('El estado de la solicitud se actualizó correctamente.')).toBeInTheDocument()
   })
 
   it('muestra estado vacío', async () => {
@@ -82,12 +83,16 @@ describe('SolicitudesPage', () => {
   })
 
   it('muestra error si falla la actualización administrativa', async () => {
-    solicitudesService.updateStatus.mockRejectedValue(new Error('No autorizado'))
+    solicitudesService.updateStatus.mockRejectedValueOnce(new Error('No autorizado'))
     renderWorkflowRoutes('/solicitudes', { id: 1, rol: 'ADMIN' })
     await screen.findByText('PENDIENTE', { selector: '.solicitud-status' })
     fireEvent.change(screen.getByLabelText('Estado'), { target: { value: 'RECHAZADA' } })
     fireEvent.click(screen.getByRole('button', { name: /actualizar estado/i }))
 
     expect(await screen.findByRole('alert')).toHaveTextContent('No autorizado')
+    fireEvent.change(screen.getByLabelText('Estado'), { target: { value: 'RECHAZADA' } })
+    fireEvent.click(screen.getByRole('button', { name: /actualizar estado/i }))
+    expect(await screen.findByText('El estado de la solicitud se actualizó correctamente.')).toBeInTheDocument()
+    expect(screen.queryByRole('alert')).not.toBeInTheDocument()
   })
 })

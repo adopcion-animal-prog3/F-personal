@@ -65,6 +65,7 @@ describe('Historial clínico', () => {
     fireEvent.click(screen.getByRole('button', { name: 'Eliminar' }))
 
     expect(await screen.findByText(/no tiene registros clínicos/i)).toBeInTheDocument()
+    expect(await screen.findByText('El registro clínico se eliminó correctamente.')).toBeInTheDocument()
     expect(confirm).toHaveBeenCalledTimes(2)
     expect(historialService.deleteById).toHaveBeenCalledWith(9)
   })

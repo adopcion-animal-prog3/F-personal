@@ -1,15 +1,17 @@
 import PropTypes from 'prop-types'
 import { Link } from 'react-router-dom'
+import FeedbackMessage from './FeedbackMessage'
 
 function SolicitudForm({
   mascotas, values, errors, onChange, onSubmit, cancelTo, isSubmitting, submitError,
 }) {
   return (
-    <form className="auth-form" onSubmit={onSubmit} noValidate>
-      {submitError ? <p className="form-alert form-alert-error" role="alert">{submitError}</p> : null}
+    <form className="auth-form" onSubmit={onSubmit} noValidate aria-busy={isSubmitting}>
+      {submitError ? <FeedbackMessage>{submitError}</FeedbackMessage> : null}
       <label className="field" htmlFor="mascotaId">
         <span>Mascota *</span>
         <select id="mascotaId" value={values.mascotaId} aria-invalid={Boolean(errors.mascotaId)}
+          aria-describedby={errors.mascotaId ? 'mascotaId-error' : undefined}
           onChange={(event) => onChange('mascotaId', event.target.value)}>
           <option value="">Seleccioná una mascota</option>
           {mascotas.map((mascota) => (
@@ -18,7 +20,7 @@ function SolicitudForm({
             </option>
           ))}
         </select>
-        {errors.mascotaId ? <small>{errors.mascotaId}</small> : null}
+        {errors.mascotaId ? <small id="mascotaId-error">{errors.mascotaId}</small> : null}
       </label>
       <label className="field" htmlFor="mensaje">
         <span>Mensaje</span>

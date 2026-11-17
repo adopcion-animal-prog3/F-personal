@@ -25,11 +25,14 @@ function useSolicitudes(user) {
   const resource = useAsyncResource(loadSolicitudes, `solicitudes-${role}-${userId}`)
   const retry = resource.retry
   const [operationError, setOperationError] = useState('')
+  const [operationSuccess, setOperationSuccess] = useState('')
 
   const updateStatus = useCallback(async (id, estado) => {
     setOperationError('')
+    setOperationSuccess('')
     try {
       await solicitudesService.updateStatus(id, estado)
+      setOperationSuccess('El estado de la solicitud se actualizó correctamente.')
       retry()
       return true
     } catch (error) {
@@ -38,7 +41,9 @@ function useSolicitudes(user) {
     }
   }, [retry])
 
-  return { ...resource, operationError, updateStatus, isAdmin: role === 'ADMIN' }
+  return {
+    ...resource, operationError, operationSuccess, updateStatus, isAdmin: role === 'ADMIN',
+  }
 }
 
 export default useSolicitudes

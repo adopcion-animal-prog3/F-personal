@@ -1,4 +1,4 @@
-import { fireEvent, screen } from '@testing-library/react'
+import { fireEvent, screen, waitFor } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { mascotaDePrueba, renderMascotasRoutes } from '../test/mascotasTestUtils'
@@ -39,6 +39,7 @@ describe('CRUD visual de mascotas', () => {
       nombre: 'Luna', especie: 'Gato', raza: null, edad: null, sexo: null, descripcion: null,
     })
     expect(mascotasService.getAll).toHaveBeenCalled()
+    expect(await screen.findByText('La mascota fue creada correctamente.')).toBeInTheDocument()
   })
 
   it('precarga la mascota para editar y permite cancelar al detalle', async () => {
@@ -66,6 +67,7 @@ describe('CRUD visual de mascotas', () => {
 
     expect(await screen.findByRole('heading', { name: 'Luna' })).toBeInTheDocument()
     expect(mascotasService.update).toHaveBeenCalledWith('7', expect.objectContaining({ nombre: 'Luna' }))
+    expect(await screen.findByText('La mascota fue actualizada correctamente.')).toBeInTheDocument()
   })
 
   it('mantiene el formulario y muestra error si falla el guardado', async () => {
@@ -78,6 +80,8 @@ describe('CRUD visual de mascotas', () => {
 
     expect(await screen.findByRole('alert')).toHaveTextContent('API no disponible')
     expect(screen.getByRole('heading', { name: /nueva mascota/i })).toBeInTheDocument()
+    await user.type(screen.getByLabelText(/nombre/i), 'Mora')
+    expect(screen.queryByRole('alert')).not.toBeInTheDocument()
   })
 
   it('pide confirmación, no elimina al cancelar y recarga tras confirmar', async () => {
@@ -93,6 +97,7 @@ describe('CRUD visual de mascotas', () => {
     fireEvent.click(screen.getByRole('button', { name: /eliminar mascota/i }))
 
     expect(await screen.findByText(/todavía no hay mascotas/i)).toBeInTheDocument()
+    expect(await screen.findByText('La mascota fue eliminada correctamente.')).toBeInTheDocument()
     expect(confirm).toHaveBeenCalledTimes(2)
     expect(mascotasService.deleteById).toHaveBeenCalledWith(7)
     expect(mascotasService.getAll).toHaveBeenCalled()
@@ -112,5 +117,24 @@ describe('CRUD visual de mascotas', () => {
     await screen.findByRole('heading', { name: 'Mora' })
     expect(screen.queryByRole('button', { name: /eliminar mascota/i })).not.toBeInTheDocument()
     expect(screen.queryByRole('link', { name: /editar mascota/i })).not.toBeInTheDocument()
+  })
+
+  it('ignora envíos repetidos mientras espera la respuesta del servicio', async () => {
+    const user = userEvent.setup()
+    let finishCreate
+    mascotasService.create.mockImplementation(() => new Promise((resolve) => {
+      finishCreate = resolve
+    }))
+    const { container } = renderMascotasRoutes('/mascotas/nueva', 'ADMIN')
+    await user.type(screen.getByLabelText(/nombre/i), 'Mora')
+    await user.type(screen.getByLabelText(/especie/i), 'Perro')
+
+    fireEvent.submit(container.querySelector('form'))
+    fireEvent.submit(container.querySelector('form'))
+
+    await waitFor(() => expect(mascotasService.create).toHaveBeenCalledTimes(1))
+    expect(screen.getByRole('button', { name: /guardando/i })).toBeDisabled()
+    finishCreate({ id: 8 })
+    expect(await screen.findByText('La mascota fue creada correctamente.')).toBeInTheDocument()
   })
 })

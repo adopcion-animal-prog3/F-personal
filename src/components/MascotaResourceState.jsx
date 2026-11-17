@@ -1,4 +1,5 @@
 import PropTypes from 'prop-types'
+import FeedbackMessage from './FeedbackMessage'
 
 function MascotaResourceState({
   status,
@@ -8,13 +9,13 @@ function MascotaResourceState({
   onRetry,
 }) {
   if (status === 'loading') {
-    return <div className="resource-state" role="status">{loadingMessage}</div>
+    return <div className="resource-state" role="status" aria-live="polite">{loadingMessage}</div>
   }
 
   if (status === 'error') {
     return (
-      <div className="resource-state resource-state-error" role="alert">
-        <p>{error}</p>
+      <div className="resource-state resource-state-error">
+        <FeedbackMessage>{error}</FeedbackMessage>
         <button className="button button-secondary" type="button" onClick={onRetry}>
           Reintentar
         </button>
@@ -22,7 +23,7 @@ function MascotaResourceState({
     )
   }
 
-  return <div className="resource-state" role="status">{emptyMessage}</div>
+  return <div className="resource-state" role="status" aria-live="polite">{emptyMessage}</div>
 }
 
 MascotaResourceState.propTypes = {
