@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from 'react'
+import { useCallback, useEffect, useRef, useState } from 'react'
 import { historialService } from '../services/historialService'
 import { mascotasService } from '../services/mascotasService'
 import {
@@ -14,6 +14,7 @@ function useHistorialForm(mascotaId, registroId) {
   const [loadError, setLoadError] = useState('')
   const [submitError, setSubmitError] = useState('')
   const [isSubmitting, setIsSubmitting] = useState(false)
+  const submitLock = useRef(false)
 
   useEffect(() => {
     let active = true
@@ -48,10 +49,12 @@ function useHistorialForm(mascotaId, registroId) {
 
   const submit = useCallback(async (event) => {
     event.preventDefault()
+    if (submitLock.current) return false
     const nextErrors = validateHistorial(values)
     setErrors(nextErrors)
     if (Object.keys(nextErrors).length) return false
 
+    submitLock.current = true
     setIsSubmitting(true)
     setSubmitError('')
     try {
@@ -63,6 +66,7 @@ function useHistorialForm(mascotaId, registroId) {
       setSubmitError(error.message || 'No se pudo guardar el registro clínico.')
       return false
     } finally {
+      submitLock.current = false
       setIsSubmitting(false)
     }
   }, [mascotaId, registroId, values])

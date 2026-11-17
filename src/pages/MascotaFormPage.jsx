@@ -1,4 +1,5 @@
 import { Link, useNavigate, useParams } from 'react-router-dom'
+import FeedbackMessage from '../components/FeedbackMessage'
 import MascotaForm from '../components/MascotaForm'
 import SectionCard from '../components/SectionCard'
 import useMascotaForm from '../hooks/useMascotaForm'
@@ -12,15 +13,20 @@ function MascotaFormPage() {
 
   const handleSubmit = async (event) => {
     if (await form.submit(event)) {
-      navigate(isEditing ? `/mascotas/${id}` : '/mascotas', { replace: true })
+      navigate(isEditing ? `/mascotas/${id}` : '/mascotas', {
+        replace: true,
+        state: { feedback: isEditing ? 'La mascota fue actualizada correctamente.' : 'La mascota fue creada correctamente.' },
+      })
     }
   }
 
-  if (form.isLoading) return <div className="resource-state" role="status">Cargando mascota...</div>
+  if (form.isLoading) {
+    return <div className="resource-state" role="status" aria-live="polite">Cargando mascota...</div>
+  }
   if (form.loadError) {
     return (
       <div className="page-shell">
-        <p className="form-alert form-alert-error" role="alert">{form.loadError}</p>
+        <FeedbackMessage>{form.loadError}</FeedbackMessage>
         <Link className="button button-secondary" to="/mascotas">Volver al listado</Link>
       </div>
     )

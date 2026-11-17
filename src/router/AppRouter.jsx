@@ -18,7 +18,7 @@ function ProtectedRoute({ children, allowedRoles }) {
   const { isAuthenticated, isLoading, user } = useAuth()
 
   if (isLoading) {
-    return <div className="route-loader">Verificando sesión...</div>
+    return <div className="route-loader" role="status" aria-live="polite">Verificando sesión...</div>
   }
 
   if (!isAuthenticated) {

@@ -1,4 +1,5 @@
 import { Link, useNavigate, useParams } from 'react-router-dom'
+import FeedbackMessage from '../components/FeedbackMessage'
 import HistorialForm from '../components/HistorialForm'
 import SectionCard from '../components/SectionCard'
 import useHistorialForm from '../hooks/useHistorialForm'
@@ -11,14 +12,21 @@ function HistorialFormPage() {
   const isEditing = Boolean(registroId)
 
   const handleSubmit = async (event) => {
-    if (await form.submit(event)) navigate(cancelTo, { replace: true })
+    if (await form.submit(event)) {
+      navigate(cancelTo, {
+        replace: true,
+        state: { feedback: isEditing ? 'El registro clínico se actualizó correctamente.' : 'El registro clínico se agregó correctamente.' },
+      })
+    }
   }
 
-  if (form.isLoading) return <div className="resource-state" role="status">Cargando registro...</div>
+  if (form.isLoading) {
+    return <div className="resource-state" role="status" aria-live="polite">Cargando registro...</div>
+  }
   if (form.loadError) {
     return (
       <div className="page-shell">
-        <p className="form-alert form-alert-error" role="alert">{form.loadError}</p>
+        <FeedbackMessage>{form.loadError}</FeedbackMessage>
         <Link className="button button-secondary" to="/historial">Volver al historial</Link>
       </div>
     )

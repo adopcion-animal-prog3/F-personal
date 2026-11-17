@@ -2,11 +2,14 @@ import { Link } from 'react-router-dom'
 import SolicitudCard from '../components/SolicitudCard'
 import MascotaResourceState from '../components/MascotaResourceState'
 import SectionCard from '../components/SectionCard'
+import FeedbackMessage from '../components/FeedbackMessage'
 import useAuth from '../hooks/useAuth'
 import useSolicitudes from '../hooks/useSolicitudes'
+import useRouteFeedback from '../hooks/useRouteFeedback'
 
 function SolicitudesPage() {
   const { user } = useAuth()
+  const feedback = useRouteFeedback()
   const resource = useSolicitudes(user)
   const solicitudes = resource.data?.solicitudes || []
   const mascotas = resource.data?.mascotas || []
@@ -15,13 +18,15 @@ function SolicitudesPage() {
   return (
     <div className="page-shell">
       <SectionCard title="Solicitudes" eyebrow="Adopción">
+        {feedback ? <FeedbackMessage tone="success">{feedback}</FeedbackMessage> : null}
         {['ADMIN', 'ADOPTANTE'].includes(user?.rol) ? (
           <Link className="button button-primary page-action" to="/solicitudes/nueva">
             Nueva solicitud
           </Link>
         ) : null}
-        {resource.operationError ? (
-          <p className="form-alert form-alert-error" role="alert">{resource.operationError}</p>
+        {resource.operationError ? <FeedbackMessage>{resource.operationError}</FeedbackMessage> : null}
+        {resource.operationSuccess ? (
+          <FeedbackMessage tone="success">{resource.operationSuccess}</FeedbackMessage>
         ) : null}
         {resource.status === 'success' && !isEmpty ? (
           <div className="record-list">

@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from 'react'
+import { useCallback, useEffect, useRef, useState } from 'react'
 import { mascotasService } from '../services/mascotasService'
 import {
   buildMascotaInitialValues,
@@ -13,6 +13,7 @@ function useMascotaForm(id) {
   const [submitError, setSubmitError] = useState('')
   const [isLoading, setIsLoading] = useState(Boolean(id))
   const [isSubmitting, setIsSubmitting] = useState(false)
+  const submitLock = useRef(false)
 
   useEffect(() => {
     if (!id) {
@@ -53,10 +54,12 @@ function useMascotaForm(id) {
 
   const submit = useCallback(async (event) => {
     event.preventDefault()
+    if (submitLock.current) return false
     const nextErrors = validateMascota(values)
     setErrors(nextErrors)
     if (Object.keys(nextErrors).length) return false
 
+    submitLock.current = true
     setIsSubmitting(true)
     setSubmitError('')
     try {
@@ -68,6 +71,7 @@ function useMascotaForm(id) {
       setSubmitError(error.message || 'No se pudo guardar la mascota.')
       return false
     } finally {
+      submitLock.current = false
       setIsSubmitting(false)
     }
   }, [id, values])

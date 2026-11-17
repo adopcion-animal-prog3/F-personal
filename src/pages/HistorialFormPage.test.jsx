@@ -38,6 +38,7 @@ describe('HistorialFormPage', () => {
     await user.click(screen.getByRole('button', { name: /guardar registro/i }))
 
     expect(await screen.findByText('Vacunación')).toBeInTheDocument()
+    expect(await screen.findByText('El registro clínico se agregó correctamente.')).toBeInTheDocument()
     expect(historialService.create).toHaveBeenCalledWith('7', {
       fecha_registro: null, descripcion: 'Vacunación', veterinario: null,
     })
@@ -61,6 +62,7 @@ describe('HistorialFormPage', () => {
       veterinario: 'Dra. Sol',
     })
     expect(await screen.findByText('Control actualizado')).toBeInTheDocument()
+    expect(await screen.findByText('El registro clínico se actualizó correctamente.')).toBeInTheDocument()
   })
 
   it('informa si la mascota de la ruta no existe', async () => {

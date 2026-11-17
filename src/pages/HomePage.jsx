@@ -1,4 +1,6 @@
 import SectionCard from '../components/SectionCard'
+import FeedbackMessage from '../components/FeedbackMessage'
+import useRouteFeedback from '../hooks/useRouteFeedback'
 
 const summary = [
   { label: 'Mascotas activas', value: '24' },
@@ -7,8 +9,11 @@ const summary = [
 ]
 
 function HomePage() {
+  const feedback = useRouteFeedback()
+
   return (
     <div className="page-shell">
+      {feedback ? <FeedbackMessage tone="success">{feedback}</FeedbackMessage> : null}
       <section className="hero-panel" aria-label="Resumen general del sistema">
         <div>
           <p className="eyebrow">Resumen</p>

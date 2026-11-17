@@ -1,5 +1,6 @@
 import { Link } from 'react-router-dom'
 import PropTypes from 'prop-types'
+import FeedbackMessage from './FeedbackMessage'
 import useDeleteHistorial from '../hooks/useDeleteHistorial'
 
 function HistorialRecordCard({ mascotaId, registro, onDeleted }) {
@@ -15,7 +16,7 @@ function HistorialRecordCard({ mascotaId, registro, onDeleted }) {
       <h3>{registro.fecha_registro || 'Fecha no informada'}</h3>
       <p>{registro.descripcion}</p>
       <p><strong>Veterinario:</strong> {registro.veterinario || 'No informado'}</p>
-      {error ? <p className="form-alert form-alert-error" role="alert">{error}</p> : null}
+      {error ? <FeedbackMessage>{error}</FeedbackMessage> : null}
       <div className="record-actions">
         <Link className="button button-secondary" to={`/historial/${mascotaId}/${registro.id}/editar`}>
           Editar

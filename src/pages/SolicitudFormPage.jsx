@@ -1,4 +1,5 @@
 import { Link, useNavigate, useSearchParams } from 'react-router-dom'
+import FeedbackMessage from '../components/FeedbackMessage'
 import MascotaResourceState from '../components/MascotaResourceState'
 import SectionCard from '../components/SectionCard'
 import SolicitudForm from '../components/SolicitudForm'
@@ -10,7 +11,12 @@ function SolicitudFormPage() {
   const form = useSolicitudForm(searchParams.get('mascotaId'))
 
   const handleSubmit = async (event) => {
-    if (await form.submit(event)) navigate('/solicitudes', { replace: true })
+    if (await form.submit(event)) {
+      navigate('/solicitudes', {
+        replace: true,
+        state: { feedback: 'La solicitud se envió correctamente.' },
+      })
+    }
   }
 
   if (form.isLoading) {
@@ -19,7 +25,7 @@ function SolicitudFormPage() {
   if (form.loadError) {
     return (
       <div className="page-shell">
-        <p className="form-alert form-alert-error" role="alert">{form.loadError}</p>
+        <FeedbackMessage>{form.loadError}</FeedbackMessage>
         <Link className="button button-secondary" to="/solicitudes">Volver</Link>
       </div>
     )

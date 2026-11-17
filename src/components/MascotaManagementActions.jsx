@@ -1,5 +1,6 @@
 import { Link, useNavigate } from 'react-router-dom'
 import PropTypes from 'prop-types'
+import FeedbackMessage from './FeedbackMessage'
 import useDeleteMascota from '../hooks/useDeleteMascota'
 
 function MascotaManagementActions({ mascota }) {
@@ -8,12 +9,17 @@ function MascotaManagementActions({ mascota }) {
 
   const handleDelete = async () => {
     if (!window.confirm(`¿Querés eliminar a ${mascota.nombre}?`)) return
-    if (await remove()) navigate('/mascotas', { replace: true })
+    if (await remove()) {
+      navigate('/mascotas', {
+        replace: true,
+        state: { feedback: 'La mascota fue eliminada correctamente.' },
+      })
+    }
   }
 
   return (
-    <div className="mascota-management">
-      {error ? <p className="form-alert form-alert-error" role="alert">{error}</p> : null}
+    <div className="mascota-management" aria-busy={isDeleting}>
+      {error ? <FeedbackMessage>{error}</FeedbackMessage> : null}
       <Link className="button button-primary" to={`/mascotas/${mascota.id}/editar`}>
         Editar mascota
       </Link>

@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import PropTypes from 'prop-types'
 import SolicitudEstadoBadge from './SolicitudEstadoBadge'
 import { SOLICITUD_ESTADOS } from '../utils/solicitudValidation'
@@ -6,15 +6,22 @@ import { SOLICITUD_ESTADOS } from '../utils/solicitudValidation'
 function SolicitudCard({ solicitud, mascotaNombre, isAdmin, onUpdateStatus }) {
   const [estado, setEstado] = useState(solicitud.estado)
   const [isSaving, setIsSaving] = useState(false)
+  const saveLock = useRef(false)
 
   useEffect(() => setEstado(solicitud.estado), [solicitud.estado])
 
   const handleUpdate = async (event) => {
     event.preventDefault()
+    if (saveLock.current) return
+    saveLock.current = true
     setIsSaving(true)
-    await onUpdateStatus(solicitud.id, estado)
-    setEstado(solicitud.estado)
-    setIsSaving(false)
+    try {
+      await onUpdateStatus(solicitud.id, estado)
+      setEstado(solicitud.estado)
+    } finally {
+      saveLock.current = false
+      setIsSaving(false)
+    }
   }
 
   return (
@@ -29,7 +36,7 @@ function SolicitudCard({ solicitud, mascotaNombre, isAdmin, onUpdateStatus }) {
         <div className="record-description"><dt>Mensaje</dt><dd>{solicitud.mensaje || 'Sin mensaje'}</dd></div>
       </dl>
       {isAdmin ? (
-        <form className="record-actions" onSubmit={handleUpdate}>
+        <form className="record-actions" onSubmit={handleUpdate} aria-busy={isSaving}>
           <label className="field" htmlFor={`estado-${solicitud.id}`}>Estado</label>
           <select id={`estado-${solicitud.id}`} value={estado} disabled={isSaving}
             onChange={(event) => setEstado(event.target.value)}>
