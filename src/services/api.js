@@ -2,6 +2,12 @@ const DEFAULT_BASE_URL = 'http://localhost:3000'
 
 let authToken = ''
 
+export const requireApiUrl = (resource) => {
+  if (!import.meta.env.VITE_API_URL?.trim()) {
+    throw new Error(`La URL de la API no está configurada. Definí VITE_API_URL para consultar ${resource}.`)
+  }
+}
+
 const buildApiUrl = (path = '') => {
   const baseUrl = (import.meta.env.VITE_API_URL || DEFAULT_BASE_URL).trim()
 

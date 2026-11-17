@@ -69,4 +69,35 @@ describe('App', () => {
     expect(await screen.findByRole('heading', { name: 'Mascotas' })).toBeInTheDocument()
     expect(screen.queryByRole('heading', { name: /nueva mascota/i })).not.toBeInTheDocument()
   })
+
+  it('prevents an ADOPTANTE from opening the clinical history route', async () => {
+    const adoptante = { id: 2, nombre: 'Luis', email: 'luis@test.com', rol: 'ADOPTANTE' }
+    vi.stubGlobal(
+      'fetch',
+      vi.fn().mockResolvedValue({
+        ok: true,
+        json: async () => ({ user: adoptante }),
+        text: async () => JSON.stringify({ user: adoptante }),
+      }),
+    )
+    window.localStorage.setItem(
+      'f-personal-auth-session',
+      JSON.stringify({ token: 'mock-token', user: adoptante }),
+    )
+    window.history.pushState({}, '', '/historial')
+
+    render(<App />)
+
+    expect(await screen.findByRole('heading', { name: 'Mascotas' })).toBeInTheDocument()
+    expect(screen.queryByRole('heading', { name: 'Historial clínico' })).not.toBeInTheDocument()
+  })
+
+  it('redirects a missing session from solicitudes to login', async () => {
+    window.history.pushState({}, '', '/solicitudes')
+
+    render(<App />)
+
+    expect(await screen.findByRole('heading', { name: /bienvenido de nuevo/i })).toBeInTheDocument()
+    expect(globalThis.fetch).not.toHaveBeenCalled()
+  })
 })
