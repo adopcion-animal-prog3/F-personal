@@ -5,9 +5,12 @@ import useAuth from '../hooks/useAuth'
 import AuthPage from '../pages/AuthPage'
 import HistorialPage from '../pages/HistorialPage'
 import HomePage from '../pages/HomePage'
+import HistorialFormPage from '../pages/HistorialFormPage'
+import HistorialMascotaPage from '../pages/HistorialMascotaPage'
 import MascotaDetailPage from '../pages/MascotaDetailPage'
 import MascotaFormPage from '../pages/MascotaFormPage'
 import MascotasPage from '../pages/MascotasPage'
+import SolicitudFormPage from '../pages/SolicitudFormPage'
 import NotFoundPage from '../pages/NotFoundPage'
 import SolicitudesPage from '../pages/SolicitudesPage'
 
@@ -57,7 +60,26 @@ function AppRouter() {
             element={<ProtectedRoute allowedRoles={['ADMIN']}><MascotaFormPage /></ProtectedRoute>}
           />
           <Route path="/solicitudes" element={<SolicitudesPage />} />
-          <Route path="/historial" element={<HistorialPage />} />
+          <Route
+            path="/solicitudes/nueva"
+            element={<SolicitudFormPage />}
+          />
+          <Route
+            path="/historial"
+            element={<ProtectedRoute allowedRoles={['ADMIN']}><HistorialPage /></ProtectedRoute>}
+          />
+          <Route
+            path="/historial/:mascotaId"
+            element={<ProtectedRoute allowedRoles={['ADMIN']}><HistorialMascotaPage /></ProtectedRoute>}
+          />
+          <Route
+            path="/historial/:mascotaId/nuevo"
+            element={<ProtectedRoute allowedRoles={['ADMIN']}><HistorialFormPage /></ProtectedRoute>}
+          />
+          <Route
+            path="/historial/:mascotaId/:registroId/editar"
+            element={<ProtectedRoute allowedRoles={['ADMIN']}><HistorialFormPage /></ProtectedRoute>}
+          />
         </Route>
 
         <Route path="/login" element={<AuthPage />} />
