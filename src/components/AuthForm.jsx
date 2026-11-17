@@ -33,7 +33,6 @@ function AuthForm({ mode = 'login', onSubmit, onClearError, isSubmitting, submit
       ...(mode === 'register' ? { nombre: values.nombre.trim() } : {}),
       email: values.email.trim(),
       password: values.password,
-      ...(mode === 'register' ? { confirmPassword: values.confirmPassword } : {}),
     }
 
     submitLock.current = true

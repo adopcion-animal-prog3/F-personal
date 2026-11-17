@@ -1,10 +1,4 @@
-import { ApiError, apiClient } from './api'
-
-const requireApiUrl = () => {
-  if (!import.meta.env.VITE_API_URL?.trim()) {
-    throw new Error('La URL de la API no está configurada. Definí VITE_API_URL para gestionar mascotas.')
-  }
-}
+import { ApiError, apiClient, requireApiUrl } from './api'
 
 const validateMascota = (mascota) => {
   if (!mascota || typeof mascota !== 'object' || Array.isArray(mascota)) {
@@ -16,7 +10,7 @@ const validateMascota = (mascota) => {
 
 export const mascotasService = {
   async getAll() {
-    requireApiUrl()
+    requireApiUrl('mascotas')
     const mascotas = await apiClient.get('/api/mascotas')
 
     if (!Array.isArray(mascotas)) {
@@ -27,7 +21,7 @@ export const mascotasService = {
   },
 
   async getById(id) {
-    requireApiUrl()
+    requireApiUrl('mascotas')
 
     try {
       const mascota = await apiClient.get(`/api/mascotas/${encodeURIComponent(id)}`)
@@ -42,17 +36,17 @@ export const mascotasService = {
   },
 
   async create(mascota) {
-    requireApiUrl()
+    requireApiUrl('mascotas')
     return apiClient.post('/api/mascotas', mascota)
   },
 
   async update(id, mascota) {
-    requireApiUrl()
+    requireApiUrl('mascotas')
     return apiClient.put(`/api/mascotas/${encodeURIComponent(id)}`, mascota)
   },
 
   async deleteById(id) {
-    requireApiUrl()
+    requireApiUrl('mascotas')
     return apiClient.delete(`/api/mascotas/${encodeURIComponent(id)}`)
   },
 }

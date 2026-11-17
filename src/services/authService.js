@@ -1,4 +1,4 @@
-import { apiClient, setAuthToken } from './api'
+import { apiClient, requireApiUrl, setAuthToken } from './api'
 
 const normalizePayload = (payload = {}) => {
   const user = payload.user ?? payload.usuario ?? payload.data?.user ?? payload.data ?? null
@@ -9,6 +9,7 @@ const normalizePayload = (payload = {}) => {
 
 export const authService = {
   async login(credentials) {
+    requireApiUrl('autenticación')
     const payload = await apiClient.post('/api/auth/login', credentials)
     const normalized = normalizePayload(payload)
 
@@ -20,6 +21,7 @@ export const authService = {
   },
 
   async register(credentials) {
+    requireApiUrl('autenticación')
     const payload = await apiClient.post('/api/auth/register', credentials)
     const normalized = normalizePayload(payload)
 
@@ -31,6 +33,7 @@ export const authService = {
   },
 
   async getCurrentUser(token) {
+    requireApiUrl('autenticación')
     setAuthToken(token)
     const payload = await apiClient.get('/api/auth/me')
     return payload?.user ?? payload?.usuario ?? payload ?? null
