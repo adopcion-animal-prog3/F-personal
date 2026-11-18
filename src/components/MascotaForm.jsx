@@ -3,16 +3,16 @@ import { Link } from 'react-router-dom'
 import FeedbackMessage from './FeedbackMessage'
 
 const fields = [
-  { name: 'nombre', label: 'Nombre', required: true },
-  { name: 'especie', label: 'Especie', required: true },
-  { name: 'raza', label: 'Raza' },
+  { name: 'nombre', label: 'Nombre', required: true, maxLength: 150 },
+  { name: 'especie', label: 'Especie', required: true, maxLength: 100 },
+  { name: 'raza', label: 'Raza', maxLength: 120 },
 ]
 
-function TextField({ name, label, value, error, required, onChange }) {
+function TextField({ name, label, value, error, required, maxLength, onChange }) {
   return (
     <label className="field" htmlFor={name}>
       <span>{label}{required ? ' *' : ''}</span>
-      <input id={name} name={name} value={value} required={required}
+      <input id={name} name={name} value={value} required={required} maxLength={maxLength}
         aria-invalid={Boolean(error)} aria-describedby={error ? `${name}-error` : undefined}
         onChange={(event) => onChange(name, event.target.value)} />
       {error ? <small id={`${name}-error`}>{error}</small> : null}
@@ -23,7 +23,7 @@ function TextField({ name, label, value, error, required, onChange }) {
 TextField.propTypes = {
   name: PropTypes.string.isRequired, label: PropTypes.string.isRequired,
   value: PropTypes.string.isRequired, error: PropTypes.string,
-  required: PropTypes.bool, onChange: PropTypes.func.isRequired,
+  required: PropTypes.bool, maxLength: PropTypes.number, onChange: PropTypes.func.isRequired,
 }
 
 function MascotaForm({ values, errors, onChange, onSubmit, cancelTo, isSubmitting, submitError }) {
@@ -36,7 +36,7 @@ function MascotaForm({ values, errors, onChange, onSubmit, cancelTo, isSubmittin
       ))}
       <label className="field" htmlFor="edad">
         <span>Edad</span>
-        <input id="edad" name="edad" type="number" min="0" step="any" value={values.edad}
+        <input id="edad" name="edad" type="number" min="0" max="2147483647" step="1" value={values.edad}
           aria-invalid={Boolean(errors.edad)} aria-describedby={errors.edad ? 'edad-error' : undefined}
           onChange={(event) => onChange('edad', event.target.value)} />
         {errors.edad ? <small id="edad-error">{errors.edad}</small> : null}
@@ -55,6 +55,11 @@ function MascotaForm({ values, errors, onChange, onSubmit, cancelTo, isSubmittin
         <span>Descripción</span>
         <textarea id="descripcion" name="descripcion" value={values.descripcion}
           onChange={(event) => onChange('descripcion', event.target.value)} />
+      </label>
+      <label className="field field-checkbox" htmlFor="adoptada">
+        <input id="adoptada" name="adoptada" type="checkbox" checked={values.adoptada}
+          onChange={(event) => onChange('adoptada', event.target.checked)} />
+        <span>La mascota ya fue adoptada</span>
       </label>
       <div className="mascota-form-actions">
         <button className="button button-primary" type="submit" disabled={isSubmitting}>

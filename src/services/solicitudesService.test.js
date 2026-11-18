@@ -7,6 +7,7 @@ const response = (body, status = 200) => ({
   json: async () => body,
   text: async () => JSON.stringify(body),
 })
+const success = (data) => ({ success: true, status: 'success', data })
 
 describe('solicitudesService', () => {
   afterEach(() => {
@@ -17,9 +18,9 @@ describe('solicitudesService', () => {
   it('prepara GET, POST sin usuario_id y PUT de estado', async () => {
     vi.stubEnv('VITE_API_URL', 'https://api.example.test')
     const fetchMock = vi.spyOn(globalThis, 'fetch')
-      .mockResolvedValueOnce(response([]))
-      .mockResolvedValueOnce(response({ id: 3 }))
-      .mockResolvedValueOnce(response({ id: 3 }))
+      .mockResolvedValueOnce(response(success([])))
+      .mockResolvedValueOnce(response(success({ id: 3 })))
+      .mockResolvedValueOnce(response(success({ id: 3 })))
     const solicitud = { mascota_id: 7, mensaje: 'Quiero adoptar' }
 
     await solicitudesService.getAll()
@@ -37,7 +38,8 @@ describe('solicitudesService', () => {
 
   it('rechaza respuestas de listado inválidas y API sin configurar', async () => {
     vi.stubEnv('VITE_API_URL', 'https://api.example.test')
-    const fetchMock = vi.spyOn(globalThis, 'fetch').mockResolvedValue(response({ data: [] }))
+    const fetchMock = vi.spyOn(globalThis, 'fetch')
+      .mockResolvedValue(response(success({ data: [] })))
     await expect(solicitudesService.getAll()).rejects.toThrow(/formato inválido/)
 
     vi.stubEnv('VITE_API_URL', '')

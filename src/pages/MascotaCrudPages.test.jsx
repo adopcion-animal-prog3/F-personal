@@ -36,7 +36,8 @@ describe('CRUD visual de mascotas', () => {
 
     await screen.findByRole('link', { name: /luna/i })
     expect(mascotasService.create).toHaveBeenCalledWith({
-      nombre: 'Luna', especie: 'Gato', raza: null, edad: null, sexo: null, descripcion: null,
+      nombre: 'Luna', especie: 'Gato', raza: null, edad: null, sexo: null,
+      descripcion: null, adoptada: false,
     })
     expect(mascotasService.getAll).toHaveBeenCalled()
     expect(await screen.findByText('La mascota fue creada correctamente.')).toBeInTheDocument()

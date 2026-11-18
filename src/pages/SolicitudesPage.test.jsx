@@ -21,7 +21,7 @@ describe('SolicitudesPage', () => {
     mascotasService.getAll.mockResolvedValue([mascotaWorkflow])
   })
 
-  it('muestra la mascota asociada y los tres estados para ADMIN', async () => {
+  it('muestra los tres estados pero solo permite cambiar solicitudes pendientes', async () => {
     solicitudesService.getAll.mockResolvedValue([
       solicitudWorkflow,
       { ...solicitudWorkflow, id: 4, estado: 'APROBADA' },
@@ -32,7 +32,7 @@ describe('SolicitudesPage', () => {
     expect(await screen.findAllByText('Mora')).toHaveLength(3)
     expect([...container.querySelectorAll('.solicitud-status')].map((badge) => badge.textContent))
       .toEqual(['PENDIENTE', 'APROBADA', 'RECHAZADA'])
-    expect(screen.getAllByRole('button', { name: /actualizar estado/i })).toHaveLength(3)
+    expect(screen.getAllByRole('button', { name: /actualizar estado/i })).toHaveLength(1)
   })
 
   it('muestra solamente solicitudes propias y no ofrece gestión a ADOPTANTE', async () => {

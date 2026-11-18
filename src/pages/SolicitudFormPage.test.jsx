@@ -29,7 +29,7 @@ describe('SolicitudFormPage', () => {
 
     await user.click(await screen.findByRole('button', { name: /enviar solicitud/i }))
     expect(await screen.findByText('Seleccioná una mascota.')).toBeInTheDocument()
-    expect(screen.getByRole('option', { name: /nina/i })).toBeInTheDocument()
+    expect(screen.queryByRole('option', { name: /nina/i })).not.toBeInTheDocument()
 
     await user.selectOptions(screen.getByLabelText(/mascota/i), '7')
     await user.type(screen.getByLabelText(/mensaje/i), '  Me gustaría adoptarla  ')

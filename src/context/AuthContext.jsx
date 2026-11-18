@@ -1,7 +1,9 @@
 import { useCallback, useEffect, useMemo, useState } from 'react'
 import PropTypes from 'prop-types'
 import { authService } from '../services/authService'
-import { clearAuthToken, setAuthToken } from '../services/api'
+import {
+  API_UNAUTHORIZED_EVENT, clearAuthToken, setAuthToken,
+} from '../services/api'
 import AuthContext from './AuthContextValue'
 
 const STORAGE_KEY = 'f-personal-auth-session'
@@ -52,12 +54,22 @@ const readErrorMessage = (error) => {
 
 export function AuthProvider({ children }) {
   const [session, setSession] = useState(() => getStoredSession())
-  const [isLoading, setIsLoading] = useState(Boolean(getStoredSession().token))
+  const [isLoading, setIsLoading] = useState(() => Boolean(session.token))
   const [error, setError] = useState('')
 
   useEffect(() => {
     persistSession(session)
   }, [session])
+
+  useEffect(() => {
+    const handleUnauthorized = () => {
+      setSession(emptySession)
+      setError('La sesión expiró o dejó de ser válida. Iniciá sesión nuevamente.')
+    }
+
+    window.addEventListener(API_UNAUTHORIZED_EVENT, handleUnauthorized)
+    return () => window.removeEventListener(API_UNAUTHORIZED_EVENT, handleUnauthorized)
+  }, [])
 
   useEffect(() => {
     let cancelled = false
@@ -104,8 +116,8 @@ export function AuthProvider({ children }) {
     try {
       const response = await authService.login(credentials)
 
-      if (!response?.token) {
-        throw new Error('La API no devolvió un token válido.')
+      if (!response?.token || !response.user) {
+        throw new Error('La API no devolvió una sesión válida.')
       }
 
       setSession((current) => ({
@@ -128,8 +140,8 @@ export function AuthProvider({ children }) {
     try {
       const response = await authService.register(credentials)
 
-      if (!response || (!response.token && !response.user)) {
-        return true
+      if (!response?.user) {
+        throw new Error('La API no devolvió el usuario registrado.')
       }
 
       const nextSession = {

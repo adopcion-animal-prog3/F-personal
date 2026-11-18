@@ -7,6 +7,7 @@ function SolicitudCard({ solicitud, mascotaNombre, isAdmin, onUpdateStatus }) {
   const [estado, setEstado] = useState(solicitud.estado)
   const [isSaving, setIsSaving] = useState(false)
   const saveLock = useRef(false)
+  const canChangeStatus = isAdmin && solicitud.estado === 'PENDIENTE'
 
   useEffect(() => setEstado(solicitud.estado), [solicitud.estado])
 
@@ -35,7 +36,7 @@ function SolicitudCard({ solicitud, mascotaNombre, isAdmin, onUpdateStatus }) {
         {isAdmin ? <div><dt>Solicitante</dt><dd>Usuario #{solicitud.usuario_id}</dd></div> : null}
         <div className="record-description"><dt>Mensaje</dt><dd>{solicitud.mensaje || 'Sin mensaje'}</dd></div>
       </dl>
-      {isAdmin ? (
+      {canChangeStatus ? (
         <form className="record-actions" onSubmit={handleUpdate} aria-busy={isSaving}>
           <label className="field" htmlFor={`estado-${solicitud.id}`}>Estado</label>
           <select id={`estado-${solicitud.id}`} value={estado} disabled={isSaving}
