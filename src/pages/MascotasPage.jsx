@@ -2,7 +2,11 @@ import PropTypes from 'prop-types'
 import MascotaCard from '../components/MascotaCard'
 import MascotaResourceState from '../components/MascotaResourceState'
 import SectionCard from '../components/SectionCard'
+import FeedbackMessage from '../components/FeedbackMessage'
+import { Link } from 'react-router-dom'
+import useAuth from '../hooks/useAuth'
 import useMascotas from '../hooks/useMascotas'
+import useRouteFeedback from '../hooks/useRouteFeedback'
 
 function MascotasList({ mascotas }) {
   return (
@@ -20,11 +24,20 @@ MascotasList.propTypes = {
 
 function MascotasPage() {
   const { data: mascotas, error, status, retry } = useMascotas()
+  const { user } = useAuth()
+  const feedback = useRouteFeedback()
+  const isAdmin = user?.rol === 'ADMIN'
   const isEmpty = status === 'success' && mascotas.length === 0
 
   return (
     <div className="page-shell">
       <SectionCard title="Mascotas" eyebrow="Listado">
+        {feedback ? <FeedbackMessage tone="success">{feedback}</FeedbackMessage> : null}
+        {isAdmin ? (
+          <Link className="button button-primary mascota-create-link" to="/mascotas/nueva">
+            Agregar mascota
+          </Link>
+        ) : null}
         {status === 'success' && !isEmpty ? (
           <MascotasList mascotas={mascotas} />
         ) : (

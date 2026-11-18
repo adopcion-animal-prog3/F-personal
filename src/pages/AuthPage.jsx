@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
 import { Link, Navigate, useLocation, useNavigate } from 'react-router-dom'
 import AuthForm from '../components/AuthForm'
+import FeedbackMessage from '../components/FeedbackMessage'
 import useAuth from '../hooks/useAuth'
 
 function AuthPage() {
@@ -20,14 +21,23 @@ function AuthPage() {
 
   const handleSubmit = async (values) => {
     setSubmitting(true)
-    const action = isLogin ? login : register
-    const success = await action(values)
+    try {
+      const action = isLogin ? login : register
+      const success = await action(values)
 
-    if (success) {
-      navigate('/')
+      if (success && isLogin) {
+        navigate('/', {
+          state: { feedback: 'Sesión iniciada correctamente.' },
+        })
+      } else if (success) {
+        navigate('/login', {
+          replace: true,
+          state: { feedback: 'Registro completado. Iniciá sesión para continuar.' },
+        })
+      }
+    } finally {
+      setSubmitting(false)
     }
-
-    setSubmitting(false)
   }
 
   return (
@@ -41,9 +51,14 @@ function AuthPage() {
             : 'Completá los datos para registrarte en la plataforma.'}
         </p>
 
+        {location.state?.feedback ? (
+          <FeedbackMessage tone="success">{location.state.feedback}</FeedbackMessage>
+        ) : null}
+
         <AuthForm
           mode={isLogin ? 'login' : 'register'}
           onSubmit={handleSubmit}
+          onClearError={clearError}
           isSubmitting={submitting || isLoading}
           submitError={error}
         />

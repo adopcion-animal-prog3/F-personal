@@ -155,10 +155,11 @@ La lista es una propuesta funcional, no una obligación de crear una ruta indepe
 La URL base debe configurarse mediante una variable de entorno, por ejemplo:
 
 ```env
-VITE_API_URL=http://localhost:3000
+VITE_API_URL=/
+API_PROXY_TARGET=http://localhost:8000
 ```
 
-El valor real debe coincidir con el backend seleccionado y el entorno de ejecución. No repetir URLs en componentes.
+Para ejecutar con B-personal mediante el proxy de desarrollo de Vite, usar `VITE_API_URL=/` y `API_PROXY_TARGET=http://localhost:8000`. Si se usa una URL absoluta, el backend remoto debe permitir el origen del frontend mediante CORS o un proxy inverso. No repetir URLs en componentes.
 
 Endpoints previstos, sujetos a verificación contra la API real:
 

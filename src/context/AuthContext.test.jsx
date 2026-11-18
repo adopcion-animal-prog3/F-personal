@@ -1,7 +1,9 @@
-import { render, screen } from '@testing-library/react'
+import { act, render, screen, waitFor } from '@testing-library/react'
+import userEvent from '@testing-library/user-event'
 import { describe, expect, it, vi } from 'vitest'
 import useAuth from '../hooks/useAuth'
 import { AuthProvider } from './AuthContext'
+import { API_UNAUTHORIZED_EVENT } from '../services/api'
 
 vi.mock('../services/authService', () => ({
   authService: {
@@ -12,12 +14,13 @@ vi.mock('../services/authService', () => ({
 }))
 
 function AuthProbe() {
-  const { isAuthenticated, user, login, logout } = useAuth()
+  const { isAuthenticated, user, login, logout, error } = useAuth()
 
   return (
     <div>
       <p>{isAuthenticated ? 'autenticado' : 'sin-sesion'}</p>
       <p>{user?.rol || 'sin-rol'}</p>
+      {error ? <p role="alert">{error}</p> : null}
       <button type="button" onClick={() => login({ email: 'ana@test.com', password: 'secret123' })}>
         login
       </button>
@@ -30,6 +33,7 @@ function AuthProbe() {
 
 describe('AuthContext', () => {
   it('renders the session state and exposes login/logout actions', async () => {
+    const user = userEvent.setup()
     render(
       <AuthProvider>
         <AuthProbe />
@@ -39,8 +43,29 @@ describe('AuthContext', () => {
     expect(screen.getByText('sin-sesion')).toBeInTheDocument()
     expect(screen.getByText('sin-rol')).toBeInTheDocument()
 
-    screen.getByRole('button', { name: /login/i }).click()
+    await user.click(screen.getByRole('button', { name: /login/i }))
 
     expect(await screen.findByText('autenticado')).toBeInTheDocument()
+    await user.click(screen.getByRole('button', { name: /logout/i }))
+    expect(await screen.findByText('sin-sesion')).toBeInTheDocument()
+  })
+
+  it('clears an expired session after an unauthorized API response', async () => {
+    const user = userEvent.setup()
+    render(
+      <AuthProvider>
+        <AuthProbe />
+      </AuthProvider>,
+    )
+    await user.click(screen.getByRole('button', { name: /login/i }))
+    expect(await screen.findByText('autenticado')).toBeInTheDocument()
+
+    act(() => window.dispatchEvent(new Event(API_UNAUTHORIZED_EVENT)))
+
+    expect(await screen.findByText('sin-sesion')).toBeInTheDocument()
+    expect(await screen.findByRole('alert')).toHaveTextContent(/sesión expiró/i)
+    await waitFor(() => {
+      expect(window.localStorage.getItem('f-personal-auth-session')).toBeNull()
+    })
   })
 })

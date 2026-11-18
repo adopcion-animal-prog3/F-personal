@@ -3,7 +3,7 @@ import { Link } from 'react-router-dom'
 function NotFoundPage() {
   return (
     <div className="page-shell">
-      <section className="auth-card not-found-card" aria-live="polite">
+      <section className="auth-card not-found-card" role="status" aria-live="polite">
         <p className="eyebrow">404</p>
         <h2>Página no encontrada</h2>
         <p>La ruta solicitada aún no existe o no está disponible en esta versión del frontend.</p>

@@ -1,10 +1,12 @@
 import { render, screen, waitFor } from '@testing-library/react'
-import { beforeEach, describe, expect, it, vi } from 'vitest'
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import App from './App'
+import { clearAuthToken } from './services/api'
 
 describe('App', () => {
   beforeEach(() => {
     window.localStorage.clear()
+    vi.stubEnv('VITE_API_URL', 'https://api.example.test')
     vi.stubGlobal(
       'fetch',
       vi.fn().mockResolvedValue({
@@ -17,6 +19,13 @@ describe('App', () => {
         }),
       }),
     )
+  })
+
+  afterEach(() => {
+    window.localStorage.clear()
+    vi.unstubAllGlobals()
+    vi.unstubAllEnvs()
+    clearAuthToken()
   })
 
   it('renders the dashboard shell for an authenticated user', async () => {
@@ -46,5 +55,58 @@ describe('App', () => {
     await waitFor(() => {
       expect(screen.getByRole('heading', { name: /página no encontrada/i })).toBeInTheDocument()
     })
+  })
+
+  it('prevents an ADOPTANTE from opening the administration form route', async () => {
+    const adoptante = { id: 2, nombre: 'Luis', email: 'luis@test.com', rol: 'ADOPTANTE' }
+    vi.stubGlobal(
+      'fetch',
+      vi.fn().mockResolvedValue({
+        ok: true,
+        json: async () => ({ user: adoptante }),
+        text: async () => JSON.stringify({ user: adoptante }),
+      }),
+    )
+    window.localStorage.setItem(
+      'f-personal-auth-session',
+      JSON.stringify({ token: 'mock-token', user: adoptante }),
+    )
+    window.history.pushState({}, '', '/mascotas/nueva')
+
+    render(<App />)
+
+    expect(await screen.findByRole('heading', { name: 'Mascotas' })).toBeInTheDocument()
+    expect(screen.queryByRole('heading', { name: /nueva mascota/i })).not.toBeInTheDocument()
+  })
+
+  it('prevents an ADOPTANTE from opening the clinical history route', async () => {
+    const adoptante = { id: 2, nombre: 'Luis', email: 'luis@test.com', rol: 'ADOPTANTE' }
+    vi.stubGlobal(
+      'fetch',
+      vi.fn().mockResolvedValue({
+        ok: true,
+        json: async () => ({ user: adoptante }),
+        text: async () => JSON.stringify({ user: adoptante }),
+      }),
+    )
+    window.localStorage.setItem(
+      'f-personal-auth-session',
+      JSON.stringify({ token: 'mock-token', user: adoptante }),
+    )
+    window.history.pushState({}, '', '/historial')
+
+    render(<App />)
+
+    expect(await screen.findByRole('heading', { name: 'Mascotas' })).toBeInTheDocument()
+    expect(screen.queryByRole('heading', { name: 'Historial clínico' })).not.toBeInTheDocument()
+  })
+
+  it('redirects a missing session from solicitudes to login', async () => {
+    window.history.pushState({}, '', '/solicitudes')
+
+    render(<App />)
+
+    expect(await screen.findByRole('heading', { name: /bienvenido de nuevo/i })).toBeInTheDocument()
+    expect(globalThis.fetch).not.toHaveBeenCalled()
   })
 })

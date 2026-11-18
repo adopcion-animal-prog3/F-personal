@@ -1,14 +1,17 @@
-import { useMemo, useState } from 'react'
+import { useMemo, useRef, useState } from 'react'
 import PropTypes from 'prop-types'
 import { buildInitialValues, validateField } from '../utils/authValidation'
+import FeedbackMessage from './FeedbackMessage'
 
-function AuthForm({ mode = 'login', onSubmit, isSubmitting, submitError }) {
+function AuthForm({ mode = 'login', onSubmit, onClearError, isSubmitting, submitError }) {
   const initialValues = useMemo(() => buildInitialValues(mode), [mode])
   const [values, setValues] = useState(initialValues)
   const [errors, setErrors] = useState({})
+  const submitLock = useRef(false)
 
   const handleChange = (event) => {
     const { name, value } = event.target
+    if (onClearError) onClearError()
     setValues((current) => ({ ...current, [name]: value }))
 
     if (errors[name]) {
@@ -16,8 +19,9 @@ function AuthForm({ mode = 'login', onSubmit, isSubmitting, submitError }) {
     }
   }
 
-  const handleSubmit = (event) => {
+  const handleSubmit = async (event) => {
     event.preventDefault()
+    if (isSubmitting || submitLock.current) return
     const nextErrors = validateField(values, mode)
     setErrors(nextErrors)
 
@@ -29,15 +33,19 @@ function AuthForm({ mode = 'login', onSubmit, isSubmitting, submitError }) {
       ...(mode === 'register' ? { nombre: values.nombre.trim() } : {}),
       email: values.email.trim(),
       password: values.password,
-      ...(mode === 'register' ? { confirmPassword: values.confirmPassword } : {}),
     }
 
-    onSubmit(sanitizedValues)
+    submitLock.current = true
+    try {
+      await onSubmit(sanitizedValues)
+    } finally {
+      submitLock.current = false
+    }
   }
 
   return (
-    <form className="auth-form" onSubmit={handleSubmit} noValidate>
-      {submitError ? <p className="form-alert form-alert-error">{submitError}</p> : null}
+    <form className="auth-form" onSubmit={handleSubmit} noValidate aria-busy={isSubmitting}>
+      {submitError ? <FeedbackMessage>{submitError}</FeedbackMessage> : null}
 
       {mode === 'register' ? (
         <label className="field" htmlFor="nombre">
@@ -47,11 +55,13 @@ function AuthForm({ mode = 'login', onSubmit, isSubmitting, submitError }) {
             name="nombre"
             type="text"
             value={values.nombre}
+            maxLength={150}
             onChange={handleChange}
             aria-invalid={Boolean(errors.nombre)}
+            aria-describedby={errors.nombre ? 'nombre-error' : undefined}
             placeholder="Tu nombre"
           />
-          {errors.nombre ? <small>{errors.nombre}</small> : null}
+          {errors.nombre ? <small id="nombre-error">{errors.nombre}</small> : null}
         </label>
       ) : null}
 
@@ -62,11 +72,13 @@ function AuthForm({ mode = 'login', onSubmit, isSubmitting, submitError }) {
           name="email"
           type="email"
           value={values.email}
+          maxLength={255}
           onChange={handleChange}
           aria-invalid={Boolean(errors.email)}
+          aria-describedby={errors.email ? 'email-error' : undefined}
           placeholder="correo@ejemplo.com"
         />
-        {errors.email ? <small>{errors.email}</small> : null}
+        {errors.email ? <small id="email-error">{errors.email}</small> : null}
       </label>
 
       <label className="field" htmlFor="password">
@@ -78,9 +90,10 @@ function AuthForm({ mode = 'login', onSubmit, isSubmitting, submitError }) {
           value={values.password}
           onChange={handleChange}
           aria-invalid={Boolean(errors.password)}
+          aria-describedby={errors.password ? 'password-error' : undefined}
           placeholder="••••••••"
         />
-        {errors.password ? <small>{errors.password}</small> : null}
+        {errors.password ? <small id="password-error">{errors.password}</small> : null}
       </label>
 
       {mode === 'register' ? (
@@ -93,9 +106,10 @@ function AuthForm({ mode = 'login', onSubmit, isSubmitting, submitError }) {
             value={values.confirmPassword}
             onChange={handleChange}
             aria-invalid={Boolean(errors.confirmPassword)}
+            aria-describedby={errors.confirmPassword ? 'confirmPassword-error' : undefined}
             placeholder="Repetí la contraseña"
           />
-          {errors.confirmPassword ? <small>{errors.confirmPassword}</small> : null}
+          {errors.confirmPassword ? <small id="confirmPassword-error">{errors.confirmPassword}</small> : null}
         </label>
       ) : null}
 
@@ -109,6 +123,7 @@ function AuthForm({ mode = 'login', onSubmit, isSubmitting, submitError }) {
 AuthForm.propTypes = {
   mode: PropTypes.oneOf(['login', 'register']),
   onSubmit: PropTypes.func.isRequired,
+  onClearError: PropTypes.func,
   isSubmitting: PropTypes.bool,
   submitError: PropTypes.string,
 }
