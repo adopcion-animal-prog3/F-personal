@@ -4,7 +4,7 @@ import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { mascotaWorkflow, renderWorkflowRoutes, solicitudWorkflow } from '../test/workflowTestUtils'
 
 vi.mock('../services/solicitudesService', () => ({
-  solicitudesService: { getAll: vi.fn(), create: vi.fn(), updateStatus: vi.fn() },
+  solicitudesService: { getAll: vi.fn(), create: vi.fn() },
 }))
 vi.mock('../services/mascotasService', () => ({
   mascotasService: { getAll: vi.fn(), getById: vi.fn() },
@@ -35,7 +35,7 @@ describe('SolicitudFormPage', () => {
     await user.type(screen.getByLabelText(/mensaje/i), '  Me gustaría adoptarla  ')
     await user.click(screen.getByRole('button', { name: /enviar solicitud/i }))
 
-    expect(await screen.findByRole('heading', { name: 'Solicitudes' })).toBeInTheDocument()
+    expect(await screen.findByRole('heading', { name: 'Mis solicitudes' })).toBeInTheDocument()
     expect(await screen.findByText('La solicitud se envió correctamente.')).toBeInTheDocument()
     expect(solicitudesService.create).toHaveBeenCalledWith({
       mascota_id: 7, mensaje: 'Me gustaría adoptarla',

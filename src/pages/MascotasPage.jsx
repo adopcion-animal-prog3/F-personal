@@ -1,54 +1,53 @@
-import PropTypes from 'prop-types'
-import MascotaCard from '../components/MascotaCard'
-import MascotaResourceState from '../components/MascotaResourceState'
-import SectionCard from '../components/SectionCard'
+import { useMemo, useState } from 'react'
 import FeedbackMessage from '../components/FeedbackMessage'
-import { Link } from 'react-router-dom'
-import useAuth from '../hooks/useAuth'
+import MascotaCard from '../components/MascotaCard'
+import MascotaFilters from '../components/MascotaFilters'
+import MascotaResourceState from '../components/MascotaResourceState'
+import PageHeader from '../components/PageHeader'
 import useMascotas from '../hooks/useMascotas'
 import useRouteFeedback from '../hooks/useRouteFeedback'
+import { filterMascotas } from '../utils/mascotaFilters'
 
-function MascotasList({ mascotas }) {
-  return (
-    <div className="mascotas-grid">
-      {mascotas.map((mascota) => (
-        <MascotaCard key={mascota.id} mascota={mascota} to={`/mascotas/${mascota.id}`} />
-      ))}
-    </div>
-  )
-}
-
-MascotasList.propTypes = {
-  mascotas: PropTypes.arrayOf(PropTypes.object).isRequired,
-}
+const INITIAL_FILTERS = { texto: '', especie: 'todas', soloDisponibles: false }
 
 function MascotasPage() {
-  const { data: mascotas, error, status, retry } = useMascotas()
-  const { user } = useAuth()
+  const { data, error, status, retry } = useMascotas()
   const feedback = useRouteFeedback()
-  const isAdmin = user?.rol === 'ADMIN'
-  const isEmpty = status === 'success' && mascotas.length === 0
+  const [filters, setFilters] = useState(INITIAL_FILTERS)
+  const mascotas = useMemo(() => data ?? [], [data])
+  const visibles = useMemo(() => filterMascotas(mascotas, filters), [mascotas, filters])
+  const sinPublicaciones = status === 'success' && mascotas.length === 0
 
   return (
     <div className="page-shell">
-      <SectionCard title="Mascotas" eyebrow="Listado">
-        {feedback ? <FeedbackMessage tone="success">{feedback}</FeedbackMessage> : null}
-        {isAdmin ? (
-          <Link className="button button-primary mascota-create-link" to="/mascotas/nueva">
-            Agregar mascota
-          </Link>
-        ) : null}
-        {status === 'success' && !isEmpty ? (
-          <MascotasList mascotas={mascotas} />
-        ) : (
-          <MascotaResourceState
-            status={isEmpty ? 'empty' : status}
-            error={`No se pudieron cargar las mascotas. ${error}`}
-            emptyMessage="Todavía no hay mascotas para mostrar."
-            onRetry={retry}
-          />
-        )}
-      </SectionCard>
+      <PageHeader eyebrow="Adoptar" title="Mascotas"
+        description="Tocá una mascota para conocerla, pedir su adopción o escribirle a quien la publicó." />
+      {feedback ? <FeedbackMessage tone="success">{feedback}</FeedbackMessage> : null}
+
+      {status === 'success' && !sinPublicaciones ? (
+        <>
+          <MascotaFilters filters={filters} onChange={setFilters} />
+          <p className="results-count" role="status">
+            {visibles.length === 1 ? '1 mascota encontrada' : `${visibles.length} mascotas encontradas`}
+          </p>
+          {visibles.length ? (
+            <div className="mascotas-grid">
+              {visibles.map((mascota) => (
+                <MascotaCard key={mascota.id} mascota={mascota} to={`/mascotas/${mascota.id}`} />
+              ))}
+            </div>
+          ) : (
+            <MascotaResourceState status="empty" emptyMessage="Ninguna mascota coincide con tu búsqueda. Probá con otros filtros." />
+          )}
+        </>
+      ) : (
+        <MascotaResourceState
+          status={sinPublicaciones ? 'empty' : status}
+          error={`No se pudieron cargar las mascotas. ${error}`}
+          emptyMessage="Todavía no hay mascotas publicadas para adopción. ¡Volvé pronto!"
+          onRetry={retry}
+        />
+      )}
     </div>
   )
 }

@@ -33,10 +33,11 @@ describe('MascotasPage', () => {
     expect(await screen.findByText(/todavía no hay mascotas/i)).toBeInTheDocument()
   })
 
-  it('muestra la acción para crear mascotas solamente a ADMIN', async () => {
-    renderMascotasRoutes('/mascotas', 'ADMIN')
-    expect(await screen.findByRole('link', { name: /agregar mascota/i }))
-      .toHaveAttribute('href', '/mascotas/nueva')
+  it('no ofrece publicar mascotas en el portal de adopción', async () => {
+    mascotasService.getAll.mockResolvedValueOnce([mascotaDePrueba])
+    renderMascotasRoutes('/mascotas')
+    expect(await screen.findByRole('link', { name: /mora/i })).toBeInTheDocument()
+    expect(screen.queryByRole('link', { name: /agregar mascota/i })).not.toBeInTheDocument()
   })
 
   it('muestra el estado de carga mientras responde el servicio', () => {

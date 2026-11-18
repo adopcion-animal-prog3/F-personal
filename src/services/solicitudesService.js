@@ -14,9 +14,4 @@ export const solicitudesService = {
     requireApiUrl('solicitudes')
     return apiClient.post('/api/solicitudes', solicitud)
   },
-
-  async updateStatus(id, estado) {
-    requireApiUrl('solicitudes')
-    return apiClient.put(`/api/solicitudes/${encodeURIComponent(id)}`, { estado })
-  },
 }

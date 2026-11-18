@@ -34,19 +34,4 @@ export const mascotasService = {
       throw error
     }
   },
-
-  async create(mascota) {
-    requireApiUrl('mascotas')
-    return apiClient.post('/api/mascotas', mascota)
-  },
-
-  async update(id, mascota) {
-    requireApiUrl('mascotas')
-    return apiClient.put(`/api/mascotas/${encodeURIComponent(id)}`, mascota)
-  },
-
-  async deleteById(id) {
-    requireApiUrl('mascotas')
-    return apiClient.delete(`/api/mascotas/${encodeURIComponent(id)}`)
-  },
 }

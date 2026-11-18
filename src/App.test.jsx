@@ -39,7 +39,7 @@ describe('App', () => {
 
     await waitFor(() => {
       expect(screen.getByRole('navigation', { name: /menú principal/i })).toBeInTheDocument()
-      expect(screen.getByRole('heading', { name: /panel principal/i })).toBeInTheDocument()
+      expect(screen.getByRole('heading', { name: /encontrá a tu próximo mejor amigo/i })).toBeInTheDocument()
     })
   })
 
@@ -57,7 +57,7 @@ describe('App', () => {
     })
   })
 
-  it('prevents an ADOPTANTE from opening the administration form route', async () => {
+  it('does not offer a pet publishing form in the adoption portal', async () => {
     const adoptante = { id: 2, nombre: 'Luis', email: 'luis@test.com', rol: 'ADOPTANTE' }
     vi.stubGlobal(
       'fetch',
@@ -75,8 +75,9 @@ describe('App', () => {
 
     render(<App />)
 
-    expect(await screen.findByRole('heading', { name: 'Mascotas' })).toBeInTheDocument()
+    expect(await screen.findByRole('heading', { name: 'Detalle de mascota' })).toBeInTheDocument()
     expect(screen.queryByRole('heading', { name: /nueva mascota/i })).not.toBeInTheDocument()
+    expect(screen.queryByLabelText(/nombre/i)).not.toBeInTheDocument()
   })
 
   it('prevents an ADOPTANTE from opening the clinical history route', async () => {
@@ -97,7 +98,7 @@ describe('App', () => {
 
     render(<App />)
 
-    expect(await screen.findByRole('heading', { name: 'Mascotas' })).toBeInTheDocument()
+    expect(await screen.findByRole('heading', { name: 'Página no encontrada' })).toBeInTheDocument()
     expect(screen.queryByRole('heading', { name: 'Historial clínico' })).not.toBeInTheDocument()
   })
 

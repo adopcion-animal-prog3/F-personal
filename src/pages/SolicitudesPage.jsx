@@ -14,30 +14,22 @@ function SolicitudesPage() {
   const solicitudes = resource.data?.solicitudes || []
   const mascotas = resource.data?.mascotas || []
   const isEmpty = resource.status === 'success' && solicitudes.length === 0
+  const findMascota = (id) => mascotas.find((item) => String(item.id) === String(id))
 
   return (
     <div className="page-shell">
-      <SectionCard title="Solicitudes" eyebrow="Adopción">
+      <SectionCard title="Mis solicitudes" eyebrow="Adopción"
+        description="Acá ves en qué estado está cada pedido de adopción que enviaste.">
         {feedback ? <FeedbackMessage tone="success">{feedback}</FeedbackMessage> : null}
-        {['ADMIN', 'ADOPTANTE'].includes(user?.rol) ? (
-          <Link className="button button-primary page-action" to="/solicitudes/nueva">
-            Nueva solicitud
-          </Link>
-        ) : null}
-        {resource.operationError ? <FeedbackMessage>{resource.operationError}</FeedbackMessage> : null}
-        {resource.operationSuccess ? (
-          <FeedbackMessage tone="success">{resource.operationSuccess}</FeedbackMessage>
-        ) : null}
+        <Link className="button button-primary page-action" to="/solicitudes/nueva">
+          Nueva solicitud
+        </Link>
         {resource.status === 'success' && !isEmpty ? (
           <div className="record-list">
-            {solicitudes.map((solicitud) => {
-              const mascota = mascotas.find((item) => String(item.id) === String(solicitud.mascota_id))
-              return (
-                <SolicitudCard key={solicitud.id} solicitud={solicitud}
-                  mascotaNombre={mascota?.nombre} isAdmin={resource.isAdmin}
-                  onUpdateStatus={resource.updateStatus} />
-              )
-            })}
+            {solicitudes.map((solicitud) => (
+              <SolicitudCard key={solicitud.id} solicitud={solicitud}
+                mascota={findMascota(solicitud.mascota_id)} />
+            ))}
           </div>
         ) : (
           <MascotaResourceState status={isEmpty ? 'empty' : resource.status}
