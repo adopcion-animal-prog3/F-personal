@@ -3,13 +3,11 @@ import { BrowserRouter, Navigate, Route, Routes } from 'react-router-dom'
 import AppLayout from '../components/AppLayout'
 import useAuth from '../hooks/useAuth'
 import AuthPage from '../pages/AuthPage'
-import HistorialPage from '../pages/HistorialPage'
+import ConversacionPage from '../pages/ConversacionPage'
 import HomePage from '../pages/HomePage'
-import HistorialFormPage from '../pages/HistorialFormPage'
-import HistorialMascotaPage from '../pages/HistorialMascotaPage'
 import MascotaDetailPage from '../pages/MascotaDetailPage'
-import MascotaFormPage from '../pages/MascotaFormPage'
 import MascotasPage from '../pages/MascotasPage'
+import MensajesPage from '../pages/MensajesPage'
 import SolicitudFormPage from '../pages/SolicitudFormPage'
 import NotFoundPage from '../pages/NotFoundPage'
 import SolicitudesPage from '../pages/SolicitudesPage'
@@ -50,36 +48,11 @@ function AppRouter() {
         >
           <Route path="/" element={<HomePage />} />
           <Route path="/mascotas" element={<MascotasPage />} />
-          <Route
-            path="/mascotas/nueva"
-            element={<ProtectedRoute allowedRoles={['ADMIN']}><MascotaFormPage /></ProtectedRoute>}
-          />
           <Route path="/mascotas/:id" element={<MascotaDetailPage />} />
-          <Route
-            path="/mascotas/:id/editar"
-            element={<ProtectedRoute allowedRoles={['ADMIN']}><MascotaFormPage /></ProtectedRoute>}
-          />
           <Route path="/solicitudes" element={<SolicitudesPage />} />
-          <Route
-            path="/solicitudes/nueva"
-            element={<SolicitudFormPage />}
-          />
-          <Route
-            path="/historial"
-            element={<ProtectedRoute allowedRoles={['ADMIN']}><HistorialPage /></ProtectedRoute>}
-          />
-          <Route
-            path="/historial/:mascotaId"
-            element={<ProtectedRoute allowedRoles={['ADMIN']}><HistorialMascotaPage /></ProtectedRoute>}
-          />
-          <Route
-            path="/historial/:mascotaId/nuevo"
-            element={<ProtectedRoute allowedRoles={['ADMIN']}><HistorialFormPage /></ProtectedRoute>}
-          />
-          <Route
-            path="/historial/:mascotaId/:registroId/editar"
-            element={<ProtectedRoute allowedRoles={['ADMIN']}><HistorialFormPage /></ProtectedRoute>}
-          />
+          <Route path="/solicitudes/nueva" element={<SolicitudFormPage />} />
+          <Route path="/mensajes" element={<MensajesPage />} />
+          <Route path="/mensajes/:usuarioId" element={<ConversacionPage />} />
         </Route>
 
         <Route path="/login" element={<AuthPage />} />

@@ -1,74 +1,67 @@
-import { useEffect, useState } from 'react'
+import { useEffect } from 'react'
 import { Link, Navigate, useLocation, useNavigate } from 'react-router-dom'
 import AuthForm from '../components/AuthForm'
-import FeedbackMessage from '../components/FeedbackMessage'
+import { HeroIllustration, Logo } from '../components/Illustrations'
+import VerificationForm from '../components/VerificationForm'
 import useAuth from '../hooks/useAuth'
+
+const PROFESIONAL_URL = import.meta.env.VITE_PROFESIONAL_URL || '/profesional/'
+
+const COPY = {
+  login: { title: 'Bienvenido de nuevo', text: 'Ingresá con tu correo y contraseña. Te enviaremos un código para confirmar que sos vos.' },
+  register: { title: 'Creá tu cuenta', text: 'Es gratis. Con tu cuenta podés solicitar adopciones y hablar con los refugios.' },
+  verify: { title: 'Revisá tu correo', text: 'Último paso: escribí el código que te enviamos.' },
+}
 
 function AuthPage() {
   const location = useLocation()
   const navigate = useNavigate()
-  const { isAuthenticated, login, register, error, clearError, isLoading } = useAuth()
+  const auth = useAuth()
   const isLogin = location.pathname === '/login'
-  const [submitting, setSubmitting] = useState(false)
+  const { clearError, cancelVerification } = auth
 
   useEffect(() => {
     clearError()
-  }, [clearError, location.pathname])
+    cancelVerification()
+  }, [clearError, cancelVerification, location.pathname])
 
-  if (isAuthenticated) {
-    return <Navigate to="/" replace />
-  }
+  if (auth.isAuthenticated) return <Navigate to="/" replace />
 
-  const handleSubmit = async (values) => {
-    setSubmitting(true)
-    try {
-      const action = isLogin ? login : register
-      const success = await action(values)
-
-      if (success && isLogin) {
-        navigate('/', {
-          state: { feedback: 'Sesión iniciada correctamente.' },
-        })
-      } else if (success) {
-        navigate('/login', {
-          replace: true,
-          state: { feedback: 'Registro completado. Iniciá sesión para continuar.' },
-        })
-      }
-    } finally {
-      setSubmitting(false)
-    }
+  const step = auth.pendingVerification ? 'verify' : isLogin ? 'login' : 'register'
+  const submit = (values) => (isLogin ? auth.login(values) : auth.register(values))
+  const verify = async (codigo) => {
+    if (await auth.verifyCode(codigo)) navigate('/', { state: { feedback: '¡Listo! Ya podés empezar a buscar a tu nueva mascota.' } })
   }
 
   return (
-    <div className="page-shell auth-shell">
-      <section className="auth-card" aria-label={isLogin ? 'Inicio de sesión' : 'Registro de usuario'}>
-        <p className="eyebrow">{isLogin ? 'Iniciar sesión' : 'Registro'}</p>
-        <h2>{isLogin ? 'Bienvenido de nuevo' : 'Crear una cuenta'}</h2>
-        <p className="auth-copy">
-          {isLogin
-            ? 'Ingresá tus datos para continuar con tu sesión.'
-            : 'Completá los datos para registrarte en la plataforma.'}
+    <div className="auth-shell">
+      <aside className="auth-aside" aria-hidden="true">
+        <div className="auth-aside-brand"><Logo size={48} /><strong>Huellitas</strong></div>
+        <HeroIllustration />
+        <p>Miles de mascotas esperan una familia. Una de ellas puede ser la tuya.</p>
+      </aside>
+
+      <section className="auth-card" aria-label={step === 'verify' ? 'Verificación por correo' : isLogin ? 'Inicio de sesión' : 'Registro de usuario'}>
+        <p className="eyebrow">{step === 'verify' ? 'Verificación' : isLogin ? 'Iniciar sesión' : 'Registro'}</p>
+        <h2>{COPY[step].title}</h2>
+        <p className="auth-copy">{COPY[step].text}</p>
+
+        {step === 'verify' ? (
+          <VerificationForm email={auth.pendingVerification.email} onVerify={verify} onResend={auth.resendCode}
+            onCancel={cancelVerification} isSubmitting={auth.isLoading} error={auth.error} />
+        ) : (
+          <>
+            <AuthForm mode={isLogin ? 'login' : 'register'} onSubmit={submit} onClearError={clearError}
+              isSubmitting={auth.isLoading} submitError={auth.error} />
+            <div className="auth-footer">
+              <span>{isLogin ? '¿Todavía no tenés cuenta?' : '¿Ya tenés cuenta?'}</span>
+              <Link to={isLogin ? '/registro' : '/login'}>{isLogin ? 'Crear cuenta gratis' : 'Iniciar sesión'}</Link>
+            </div>
+          </>
+        )}
+        <p className="auth-portal-note">
+          ¿Sos refugio o veterinaria? <a href={PROFESIONAL_URL}>Ingresá al portal profesional</a>.
         </p>
-
-        {location.state?.feedback ? (
-          <FeedbackMessage tone="success">{location.state.feedback}</FeedbackMessage>
-        ) : null}
-
-        <AuthForm
-          mode={isLogin ? 'login' : 'register'}
-          onSubmit={handleSubmit}
-          onClearError={clearError}
-          isSubmitting={submitting || isLoading}
-          submitError={error}
-        />
-
-        <div className="auth-footer">
-          <span>{isLogin ? 'Todavía no tenés cuenta?' : 'Ya tenés cuenta?'}</span>
-          <Link to={isLogin ? '/registro' : '/login'}>
-            {isLogin ? 'Crear cuenta' : 'Iniciar sesión'}
-          </Link>
-        </div>
       </section>
     </div>
   )

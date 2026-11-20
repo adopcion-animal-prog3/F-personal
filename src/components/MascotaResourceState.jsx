@@ -1,5 +1,6 @@
 import PropTypes from 'prop-types'
 import FeedbackMessage from './FeedbackMessage'
+import { EmptyIllustration } from './Illustrations'
 
 function MascotaResourceState({
   status,
@@ -9,7 +10,12 @@ function MascotaResourceState({
   onRetry,
 }) {
   if (status === 'loading') {
-    return <div className="resource-state" role="status" aria-live="polite">{loadingMessage}</div>
+    return (
+      <div className="resource-state" role="status" aria-live="polite">
+        <span className="spinner" aria-hidden="true" />
+        {loadingMessage}
+      </div>
+    )
   }
 
   if (status === 'error') {
@@ -23,7 +29,12 @@ function MascotaResourceState({
     )
   }
 
-  return <div className="resource-state" role="status" aria-live="polite">{emptyMessage}</div>
+  return (
+    <div className="resource-state resource-state-empty" role="status" aria-live="polite">
+      <EmptyIllustration />
+      <p>{emptyMessage}</p>
+    </div>
+  )
 }
 
 MascotaResourceState.propTypes = {

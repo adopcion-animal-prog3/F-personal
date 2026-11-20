@@ -2,11 +2,15 @@ import { afterEach, describe, expect, it, vi } from 'vitest'
 import { authService } from './authService'
 import { clearAuthToken } from './api'
 
-const mockResponse = (body, ok = true) => ({
-  ok,
+const mockResponse = (body, status = 200) => ({
+  ok: status >= 200 && status < 300,
+  status,
   json: async () => body,
   text: async () => JSON.stringify(body),
 })
+const success = (data, status = 200) => mockResponse({ success: true, status: 'success', data }, status)
+const verificacion = { email: 'ana@test.com', proposito: 'LOGIN', expira_en_minutos: 10 }
+const user = { id: 1, nombre: 'Ana', email: 'ana@test.com', rol: 'ADOPTANTE' }
 
 describe('authService', () => {
   afterEach(() => {
@@ -15,85 +19,77 @@ describe('authService', () => {
     clearAuthToken()
   })
 
-  it('login returns token and user from the API response', async () => {
+  it('login no entrega sesión: devuelve los datos del código enviado por correo', async () => {
     vi.stubEnv('VITE_API_URL', 'https://api.example.test')
-    const postSpy = vi.spyOn(globalThis, 'fetch').mockResolvedValue(mockResponse({
-      success: true,
-      status: 'success',
-      data: {
-        token: 'abc123',
-        user: { id: 1, nombre: 'Ana', email: 'ana@test.com', rol: 'ADMIN' },
-      },
-    }))
+    const fetchMock = vi.spyOn(globalThis, 'fetch')
+      .mockResolvedValue(success({ verificacion_requerida: true, verificacion }, 202))
 
     const result = await authService.login({ email: 'ana@test.com', password: 'secret123' })
 
-    expect(result.token).toBe('abc123')
-    expect(result.user.email).toBe('ana@test.com')
-    expect(postSpy).toHaveBeenCalledWith(
-      'https://api.example.test/api/auth/login',
-      expect.objectContaining({ method: 'POST' }),
-    )
+    expect(result).toEqual({ verificacion })
+    expect(fetchMock).toHaveBeenCalledWith('https://api.example.test/api/auth/login',
+      expect.objectContaining({ method: 'POST' }))
   })
 
-  it('register returns a controlled error when the API is not available', async () => {
+  it('verify envía el código y guarda el token para las siguientes peticiones', async () => {
     vi.stubEnv('VITE_API_URL', 'https://api.example.test')
-    vi.spyOn(globalThis, 'fetch').mockRejectedValue(new Error('Failed to fetch'))
+    const fetchMock = vi.spyOn(globalThis, 'fetch')
+      .mockResolvedValueOnce(success({ token: 'abc123', user }))
+      .mockResolvedValueOnce(success({ user }))
 
-    await expect(authService.register({ nombre: 'Ana', email: 'ana@test.com', password: 'secret123' })).rejects.toThrow()
+    await expect(authService.verify({ email: 'ana@test.com', codigo: '123456' }))
+      .resolves.toEqual({ token: 'abc123', user })
+    expect(JSON.parse(fetchMock.mock.calls[0][1].body)).toEqual({ email: 'ana@test.com', codigo: '123456' })
+
+    await authService.getCurrentUser('abc123')
+    expect(fetchMock.mock.calls[1][1].headers.Authorization).toBe('Bearer abc123')
   })
 
-  it('accepts the registration response without a token and sends only the backend fields', async () => {
+  it('el registro devuelve la verificación pendiente y envía solo los campos del backend', async () => {
     vi.stubEnv('VITE_API_URL', 'https://api.example.test')
-    const fetchMock = vi.spyOn(globalThis, 'fetch').mockResolvedValue(mockResponse({
-      success: true,
-      status: 'success',
-      data: { id: 2, nombre: 'Ana', email: 'ana@test.com', rol: 'ADOPTANTE' },
-    }))
+    const pendiente = { ...verificacion, proposito: 'REGISTRO' }
+    const fetchMock = vi.spyOn(globalThis, 'fetch')
+      .mockResolvedValue(success({ ...user, verificacion_requerida: true, verificacion: pendiente }, 201))
 
-    await expect(authService.register({
-      nombre: 'Ana', email: 'ana@test.com', password: 'secret123',
-    })).resolves.toEqual({
-      token: null,
-      user: { id: 2, nombre: 'Ana', email: 'ana@test.com', rol: 'ADOPTANTE' },
-    })
-    expect(fetchMock).toHaveBeenCalledWith(
-      'https://api.example.test/api/auth/register',
-      expect.objectContaining({
-        method: 'POST',
-        body: JSON.stringify({ nombre: 'Ana', email: 'ana@test.com', password: 'secret123' }),
-      }),
-    )
+    await expect(authService.register({ nombre: 'Ana', email: 'ana@test.com', password: 'secret123' }))
+      .resolves.toEqual({ verificacion: pendiente })
+    expect(fetchMock.mock.calls[0][1].body)
+      .toBe(JSON.stringify({ nombre: 'Ana', email: 'ana@test.com', password: 'secret123' }))
   })
 
-  it('sends the session token as a Bearer authorization header', async () => {
+  it('traduce los errores de la API a mensajes claros', async () => {
     vi.stubEnv('VITE_API_URL', 'https://api.example.test')
-    const fetchMock = vi.spyOn(globalThis, 'fetch').mockResolvedValue(mockResponse({
-      success: true,
-      status: 'success',
-      data: { user: { id: 1, nombre: 'Ana', email: 'ana@test.com', rol: 'ADMIN' } },
-    }))
+    const fetchMock = vi.spyOn(globalThis, 'fetch')
+    const fail = (status) => fetchMock.mockResolvedValueOnce(mockResponse({ success: false, message: 'x' }, status))
 
-    await expect(authService.getCurrentUser('session-token')).resolves.toEqual({
-      id: 1, nombre: 'Ana', email: 'ana@test.com', rol: 'ADMIN',
-    })
-
-    expect(fetchMock).toHaveBeenCalledWith(
-      'https://api.example.test/api/auth/me',
-      expect.objectContaining({
-        headers: expect.objectContaining({ Authorization: 'Bearer session-token' }),
-      }),
-    )
+    fail(401)
+    await expect(authService.login({ email: 'a@b.co', password: 'x' })).rejects.toThrow(/correo o la contraseña/)
+    fail(403)
+    await expect(authService.login({ email: 'a@b.co', password: 'x' })).rejects.toThrow(/portal profesional/)
+    fail(409)
+    await expect(authService.register({ nombre: 'A', email: 'a@b.co', password: 'x' })).rejects.toThrow(/Ya existe/)
+    fail(400)
+    await expect(authService.verify({ email: 'a@b.co', codigo: '000000' })).rejects.toThrow(/código no es correcto/)
+    fail(429)
+    await expect(authService.resendCode('a@b.co')).rejects.toThrow(/Esperá un minuto/)
   })
 
-  it('does not send authentication requests without VITE_API_URL', async () => {
+  it('rechaza respuestas incompletas de la API', async () => {
+    vi.stubEnv('VITE_API_URL', 'https://api.example.test')
+    vi.spyOn(globalThis, 'fetch').mockResolvedValue(success({ token: 'abc' }))
+
+    await expect(authService.login({ email: 'a@b.co', password: 'x' })).rejects.toThrow(/verificar/)
+    await expect(authService.verify({ email: 'a@b.co', codigo: '123456' })).rejects.toThrow(/sesión válida/)
+    await expect(authService.getCurrentUser('t')).rejects.toThrow(/usuario válido/)
+  })
+
+  it('no envía pedidos de autenticación sin VITE_API_URL', async () => {
     vi.stubEnv('VITE_API_URL', '')
     const fetchMock = vi.spyOn(globalThis, 'fetch')
 
-    await expect(authService.login({ email: 'ana@test.com', password: 'secret123' }))
-      .rejects.toThrow(/VITE_API_URL/)
-    await expect(authService.register({ nombre: 'Ana', email: 'ana@test.com', password: 'secret123' }))
-      .rejects.toThrow(/VITE_API_URL/)
+    await expect(authService.login({ email: 'ana@test.com', password: 'secret123' })).rejects.toThrow(/VITE_API_URL/)
+    await expect(authService.verify({ email: 'ana@test.com', codigo: '123456' })).rejects.toThrow(/VITE_API_URL/)
+    await expect(authService.resendCode('ana@test.com')).rejects.toThrow(/VITE_API_URL/)
     await expect(authService.getCurrentUser('session-token')).rejects.toThrow(/VITE_API_URL/)
     expect(fetchMock).not.toHaveBeenCalled()
   })

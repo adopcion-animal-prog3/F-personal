@@ -1,29 +1,9 @@
-import { useEffect, useRef, useState } from 'react'
 import PropTypes from 'prop-types'
+import { Link } from 'react-router-dom'
 import SolicitudEstadoBadge from './SolicitudEstadoBadge'
-import { SOLICITUD_ESTADOS } from '../utils/solicitudValidation'
 
-function SolicitudCard({ solicitud, mascotaNombre, isAdmin, onUpdateStatus }) {
-  const [estado, setEstado] = useState(solicitud.estado)
-  const [isSaving, setIsSaving] = useState(false)
-  const saveLock = useRef(false)
-  const canChangeStatus = isAdmin && solicitud.estado === 'PENDIENTE'
-
-  useEffect(() => setEstado(solicitud.estado), [solicitud.estado])
-
-  const handleUpdate = async (event) => {
-    event.preventDefault()
-    if (saveLock.current) return
-    saveLock.current = true
-    setIsSaving(true)
-    try {
-      await onUpdateStatus(solicitud.id, estado)
-      setEstado(solicitud.estado)
-    } finally {
-      saveLock.current = false
-      setIsSaving(false)
-    }
-  }
+function SolicitudCard({ solicitud, mascota }) {
+  const publicadorId = mascota?.creado_por
 
   return (
     <article className="record-card">
@@ -32,21 +12,14 @@ function SolicitudCard({ solicitud, mascotaNombre, isAdmin, onUpdateStatus }) {
         <SolicitudEstadoBadge estado={solicitud.estado} />
       </header>
       <dl className="record-fields">
-        <div><dt>Mascota</dt><dd>{mascotaNombre || `ID ${solicitud.mascota_id}`}</dd></div>
-        {isAdmin ? <div><dt>Solicitante</dt><dd>Usuario #{solicitud.usuario_id}</dd></div> : null}
+        <div><dt>Mascota</dt><dd>{mascota?.nombre || `ID ${solicitud.mascota_id}`}</dd></div>
         <div className="record-description"><dt>Mensaje</dt><dd>{solicitud.mensaje || 'Sin mensaje'}</dd></div>
       </dl>
-      {canChangeStatus ? (
-        <form className="record-actions" onSubmit={handleUpdate} aria-busy={isSaving}>
-          <label className="field" htmlFor={`estado-${solicitud.id}`}>Estado</label>
-          <select id={`estado-${solicitud.id}`} value={estado} disabled={isSaving}
-            onChange={(event) => setEstado(event.target.value)}>
-            {SOLICITUD_ESTADOS.map((option) => <option key={option}>{option}</option>)}
-          </select>
-          <button className="button button-primary" type="submit" disabled={isSaving || estado === solicitud.estado}>
-            {isSaving ? 'Actualizando...' : 'Actualizar estado'}
-          </button>
-        </form>
+      {publicadorId != null ? (
+        <Link className="button button-secondary"
+          to={`/mensajes/${publicadorId}?mascotaId=${solicitud.mascota_id}`}>
+          Escribir al publicador
+        </Link>
       ) : null}
     </article>
   )
@@ -55,13 +28,14 @@ function SolicitudCard({ solicitud, mascotaNombre, isAdmin, onUpdateStatus }) {
 SolicitudCard.propTypes = {
   solicitud: PropTypes.shape({
     id: PropTypes.oneOfType([PropTypes.string, PropTypes.number]).isRequired,
-    usuario_id: PropTypes.oneOfType([PropTypes.string, PropTypes.number]).isRequired,
     mascota_id: PropTypes.oneOfType([PropTypes.string, PropTypes.number]).isRequired,
     estado: PropTypes.oneOf(['PENDIENTE', 'APROBADA', 'RECHAZADA']).isRequired,
     mensaje: PropTypes.string,
   }).isRequired,
-  mascotaNombre: PropTypes.string, isAdmin: PropTypes.bool.isRequired,
-  onUpdateStatus: PropTypes.func.isRequired,
+  mascota: PropTypes.shape({
+    nombre: PropTypes.string,
+    creado_por: PropTypes.oneOfType([PropTypes.string, PropTypes.number]),
+  }),
 }
 
 export default SolicitudCard

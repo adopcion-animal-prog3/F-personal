@@ -41,7 +41,8 @@ function SolicitudFormPage() {
 
   return (
     <div className="page-shell">
-      <SectionCard title="Solicitar adopción" eyebrow="Nueva solicitud">
+      <SectionCard title="Solicitar adopción" eyebrow="Nueva solicitud"
+        description="Contale al refugio por qué querés adoptar. Te van a responder por mensajes.">
         <SolicitudForm mascotas={form.mascotas} values={form.values} errors={form.errors}
           onChange={form.updateField} onSubmit={handleSubmit} cancelTo="/solicitudes"
           isSubmitting={form.isSubmitting} submitError={form.submitError} />

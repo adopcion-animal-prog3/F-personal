@@ -7,20 +7,23 @@ import { API_UNAUTHORIZED_EVENT } from '../services/api'
 
 vi.mock('../services/authService', () => ({
   authService: {
-    login: vi.fn(async () => ({ token: 'token-123', user: { id: 1, nombre: 'Ana', email: 'ana@test.com', rol: 'ADOPTANTE' } })),
-    register: vi.fn(async () => ({ token: 'token-456', user: { id: 2, nombre: 'Luis', email: 'luis@test.com', rol: 'ADMIN' } })),
+    login: vi.fn(async () => ({ verificacion: { email: 'ana@test.com', proposito: 'LOGIN' } })),
+    verify: vi.fn(async () => ({ token: 'token-123', user: { id: 1, nombre: 'Ana', email: 'ana@test.com', rol: 'ADOPTANTE' } })),
+    resendCode: vi.fn(async () => ({})),
     getCurrentUser: vi.fn(async () => ({ id: 1, nombre: 'Ana', email: 'ana@test.com', rol: 'ADOPTANTE' })),
   },
 }))
 
 function AuthProbe() {
-  const { isAuthenticated, user, login, logout, error } = useAuth()
+  const { isAuthenticated, user, login, verifyCode, logout, error, pendingVerification } = useAuth()
 
   return (
     <div>
       <p>{isAuthenticated ? 'autenticado' : 'sin-sesion'}</p>
       <p>{user?.rol || 'sin-rol'}</p>
       {error ? <p role="alert">{error}</p> : null}
+      {pendingVerification ? <p>codigo-pendiente:{pendingVerification.email}</p> : null}
+      <button type="button" onClick={() => verifyCode('123456')}>verificar</button>
       <button type="button" onClick={() => login({ email: 'ana@test.com', password: 'secret123' })}>
         login
       </button>
@@ -44,8 +47,12 @@ describe('AuthContext', () => {
     expect(screen.getByText('sin-rol')).toBeInTheDocument()
 
     await user.click(screen.getByRole('button', { name: /login/i }))
+    expect(await screen.findByText('codigo-pendiente:ana@test.com')).toBeInTheDocument()
+    expect(screen.getByText('sin-sesion')).toBeInTheDocument()
 
+    await user.click(screen.getByRole('button', { name: /verificar/i }))
     expect(await screen.findByText('autenticado')).toBeInTheDocument()
+    expect(screen.queryByText(/codigo-pendiente/)).not.toBeInTheDocument()
     await user.click(screen.getByRole('button', { name: /logout/i }))
     expect(await screen.findByText('sin-sesion')).toBeInTheDocument()
   })
@@ -58,6 +65,7 @@ describe('AuthContext', () => {
       </AuthProvider>,
     )
     await user.click(screen.getByRole('button', { name: /login/i }))
+    await user.click(await screen.findByRole('button', { name: /verificar/i }))
     expect(await screen.findByText('autenticado')).toBeInTheDocument()
 
     act(() => window.dispatchEvent(new Event(API_UNAUTHORIZED_EVENT)))

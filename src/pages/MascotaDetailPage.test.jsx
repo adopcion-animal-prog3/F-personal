@@ -21,8 +21,8 @@ describe('MascotaDetailPage', () => {
     expect(await screen.findByRole('heading', { name: 'Mora' })).toBeInTheDocument()
     expect(mascotasService.getById).toHaveBeenCalledWith('7')
     expect(screen.getByText('Mestiza')).toBeInTheDocument()
-    expect(screen.getByText('F')).toBeInTheDocument()
-    expect(screen.getByText('0')).toBeInTheDocument()
+    expect(screen.getByText('Hembra')).toBeInTheDocument()
+    expect(screen.getByText('Menos de 1 año')).toBeInTheDocument()
   })
 
   it('muestra la carga del detalle', () => {
@@ -53,5 +53,25 @@ describe('MascotaDetailPage', () => {
     fireEvent.click(screen.getByRole('link', { name: /volver al listado/i }))
     expect(await screen.findByRole('heading', { name: 'Mascotas' })).toBeInTheDocument()
     expect(await screen.findByRole('link', { name: /mora/i })).toBeInTheDocument()
+  })
+
+  it('ofrece solicitar la adopción y contactar al publicador', async () => {
+    renderMascotasRoutes('/mascotas/7')
+
+    expect(await screen.findByRole('link', { name: /solicitar adopción/i }))
+      .toHaveAttribute('href', '/solicitudes/nueva?mascotaId=7')
+    fireEvent.click(screen.getByRole('link', { name: /contactar al publicador/i }))
+    expect(await screen.findByRole('heading', { name: 'Conversación abierta' })).toBeInTheDocument()
+  })
+
+  it('no permite solicitar una mascota adoptada ni editarla o eliminarla', async () => {
+    mascotasService.getById.mockResolvedValue({ ...mascotaDePrueba, adoptada: true, imagen: 'data:image/png;base64,AA==' })
+    renderMascotasRoutes('/mascotas/7')
+
+    expect(await screen.findByText(/ya fue adoptada/i)).toBeInTheDocument()
+    expect(screen.getByRole('img', { name: 'Foto de Mora' })).toHaveAttribute('src', 'data:image/png;base64,AA==')
+    expect(screen.queryByRole('link', { name: /solicitar adopción/i })).not.toBeInTheDocument()
+    expect(screen.queryByRole('link', { name: /editar/i })).not.toBeInTheDocument()
+    expect(screen.queryByRole('button', { name: /eliminar/i })).not.toBeInTheDocument()
   })
 })

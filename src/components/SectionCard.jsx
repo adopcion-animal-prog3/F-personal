@@ -1,13 +1,12 @@
 import PropTypes from 'prop-types'
+import PageHeader from './PageHeader'
 
-function SectionCard({ title, eyebrow, children, accent }) {
+// Página con encabezado y un panel blanco para el contenido principal.
+function SectionCard({ title, eyebrow, description, children }) {
   return (
     <section className="section-card" aria-label={title}>
-      <div className="section-header">
-        {eyebrow ? <p className="section-eyebrow">{eyebrow}</p> : null}
-        <h2>{title}</h2>
-      </div>
-      <div className={`section-body ${accent ? `accent-${accent}` : ''}`}>{children}</div>
+      <PageHeader eyebrow={eyebrow} title={title} description={description} />
+      <div className="panel section-body">{children}</div>
     </section>
   )
 }
@@ -15,8 +14,8 @@ function SectionCard({ title, eyebrow, children, accent }) {
 SectionCard.propTypes = {
   title: PropTypes.string.isRequired,
   eyebrow: PropTypes.string,
+  description: PropTypes.string,
   children: PropTypes.node,
-  accent: PropTypes.string,
 }
 
 export default SectionCard
